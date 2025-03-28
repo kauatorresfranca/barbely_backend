@@ -136,3 +136,5 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Adicione o domínio do seu frontend
 ]
+
+AUTH_USER_MODEL = 'users.Barbearia'  # Certifique-se de que o nome do app está correto
