@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "users",
     "rest_framework",
+    "rest_framework.authtoken",
+    "rest_framework_simplejwt",
     "corsheaders",
 ]
 
@@ -137,4 +139,15 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Adicione o domínio do seu frontend
 ]
 
-AUTH_USER_MODEL = 'users.Barbearia'  # Certifique-se de que o nome do app está correto
+AUTH_USER_MODEL = 'users.Barbearia'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Classe de autenticação JWT
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',  # Requer autenticação
+    ),
+}
+
+

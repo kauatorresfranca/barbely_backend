@@ -1,8 +1,12 @@
 from django.urls import path
-from .views import BarbeariaViewSet
+from .viewsets.barbearia_viewset import BarbeariaViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'barbearias', BarbeariaViewSet)
+router.register(r'barbearias', BarbeariaViewSet, basename='barbearia')
 
-urlpatterns = router.urls  # As URLs são geradas automaticamente pelo DRF
+urlpatterns = [
+    path('login/', BarbeariaViewSet.as_view({'post': 'login'}), name='login'),
+]
+
+urlpatterns += router.urls
