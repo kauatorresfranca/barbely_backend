@@ -1,12 +1,10 @@
-from django.urls import path
-from .viewsets.barbearia_viewset import BarbeariaViewSet
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .viewsets.barbearia_viewset import BarbeariaViewSet
 
 router = DefaultRouter()
 router.register(r'barbearias', BarbeariaViewSet, basename='barbearia')
 
 urlpatterns = [
-    path('login/', BarbeariaViewSet.as_view({'post': 'login'}), name='login'),
+    path('', include(router.urls)),  # Inclui todas as rotas do ViewSet
 ]
-
-urlpatterns += router.urls

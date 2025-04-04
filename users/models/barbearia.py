@@ -2,21 +2,6 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.text import slugify
 
-class BarbeariaManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError("O e-mail é obrigatório")
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-        return self.create_user(email, password, **extra_fields)
-
 class Barbearia(AbstractUser):
     nome_barbearia = models.CharField(max_length=100)
     nome_proprietario = models.CharField(max_length=100)
@@ -33,12 +18,24 @@ class Barbearia(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-    objects = BarbeariaManager()  # Usa o manager personalizado
+    objects = BaseUserManager()
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.nome_barbearia)
+            base_slug = slugify(self.nome_barbearia)
+            unique_slug = base_slug
+            contador = 1
+
+            while Barbearia.objects.filter(slug=unique_slug).exists():
+                unique_slug = f"{base_slug}-{contador}"
+                contador += 1
+
+            self.slug = unique_slug
+
         super().save(*args, **kwargs)
+
+    def get_url_personalizada(self):
+        return f"https://barberly.com/{self.slug}"
 
     def __str__(self):
         return self.nome_barbearia
