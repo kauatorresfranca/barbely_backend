@@ -143,11 +143,17 @@ AUTH_USER_MODEL = 'users.Barbearia'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Classe de autenticação JWT
+        'users.authentication.ClienteJWTAuthentication',  # Classe de autenticação JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',  # Requer autenticação
     ),
 }
+
+AUTHENTICATION_BACKENDS = [
+    'users.backends.ClienteBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 
