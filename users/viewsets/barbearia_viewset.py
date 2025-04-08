@@ -3,20 +3,19 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
+from users.authentication import BarbeariaJWTAuthentication
 from users.models import Barbearia
 from users.serializers import BarbeariaSerializer
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 class BarbeariaViewSet(viewsets.ModelViewSet):
     queryset = Barbearia.objects.all()
     serializer_class = BarbeariaSerializer
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [BarbeariaJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        # Permite acesso sem autenticação apenas para login e busca por slug
         if self.action in ['login', 'buscar_por_slug', 'create', 'list']:
             return []
         return super().get_permissions()
@@ -30,7 +29,6 @@ class BarbeariaViewSet(viewsets.ModelViewSet):
             barbearia = Barbearia.objects.get(email=email)
             if barbearia.check_password(password):
                 refresh = RefreshToken.for_user(barbearia)
-                serializer = BarbeariaSerializer(barbearia)
                 return Response({
                     "message": "Login realizado com sucesso!",
                     "barbearia_id": barbearia.id,

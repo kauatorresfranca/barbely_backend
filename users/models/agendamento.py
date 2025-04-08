@@ -1,17 +1,15 @@
 from django.db import models
-from .barbearia import Barbearia
-from .cliente import Cliente
+from .funcionario import Funcionario
+from .servico import Servico
 
 class Agendamento(models.Model):
-    barbearia = models.ForeignKey(Barbearia, on_delete=models.CASCADE, related_name="agendamentos")
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="agendamentos")
+    cliente = models.ForeignKey('ClienteUser', on_delete=models.CASCADE, related_name='agendamentos')
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='agendamentos')
+    servico = models.ForeignKey(Servico, on_delete=models.CASCADE)
     data = models.DateField()
-    hora = models.TimeField()
-    status = models.CharField(
-        max_length=10,
-        choices=[("pendente", "Pendente"), ("confirmado", "Confirmado"), ("cancelado", "Cancelado")],
-        default="pendente"
-    )
+    hora_inicio = models.TimeField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+    cancelado = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.cliente.nome} - {self.data} {self.hora}"
+        return f"{self.servico.nome} com {self.funcionario.nome} em {self.data} às {self.hora_inicio}"
