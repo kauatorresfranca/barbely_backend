@@ -4,9 +4,10 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from ..models import ClienteUser, Cliente
-from ..serializers import ClienteSerializer
+from ...models import ClienteUser, Cliente
+from ...serializers import ClienteSerializer
 from rest_framework.generics import RetrieveAPIView
+from users.authentication import ClienteJWTAuthentication
 
 
 class ClienteLoginView(APIView):
@@ -34,6 +35,7 @@ class ClienteLoginView(APIView):
 
 
 class ClienteUserInfoView(APIView):
+    authentication_classes = [ClienteJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
