@@ -16,10 +16,15 @@ class FuncionarioViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if self.request.method == 'GET' and not user or not user.is_authenticated:
-            # Quando for uma listagem pública, pode pegar tudo (ou filtrar depois por barbearia via query params)
-            return Funcionario.objects.all()
-        return Funcionario.objects.filter(barbearia=user)
+        barbearia_slug = self.request.query_params.get('barbearia_slug')
+
+        if user and user.is_authenticated:
+            return Funcionario.objects.filter(barbearia=user)
+
+        if barbearia_slug:
+            return Funcionario.objects.filter(barbearia__slug=barbearia_slug)
+
+        return Funcionario.objects.none()  # evita listar tudo quando não tem filtro
 
     def perform_create(self, serializer):
         serializer.save(barbearia=self.request.user)

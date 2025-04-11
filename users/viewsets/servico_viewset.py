@@ -16,10 +16,18 @@ class ServicoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if self.request.method == 'GET' and (not user or not user.is_authenticated):
-            # Listagem pública - pode adaptar para filtrar por barbearia via query param no futuro
-            return Servico.objects.all()
-        return Servico.objects.filter(barbearia=user)
+        barbearia_slug = self.request.query_params.get('barbearia_slug')
+
+        # Requisições autenticadas: filtra pelo usuário logado
+        if user and user.is_authenticated:
+            return Servico.objects.filter(barbearia=user)
+
+        # Requisições públicas com slug: filtra pela barbearia informada
+        if barbearia_slug:
+            return Servico.objects.filter(barbearia__slug=barbearia_slug)
+
+        # Nenhuma condição válida: retorna queryset vazio
+        return Servico.objects.none()
 
     def perform_create(self, serializer):
         serializer.save(barbearia=self.request.user)
