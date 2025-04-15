@@ -5,9 +5,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from users.models import Agendamento
+from users.authentication import ClienteJWTAuthentication
 
 class CancelarAgendamentoView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [ClienteJWTAuthentication]
 
     def patch(self, request, pk):
         try:

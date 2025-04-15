@@ -22,7 +22,12 @@ class Barbearia(AbstractUser):
     nome_proprietario = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True, null=True)
     email = models.EmailField(unique=True)
-    cnpj = models.CharField(max_length=14, unique=True, blank=True, null=True)
+    cnpj = models.CharField(max_length=18, unique=True, blank=True, null=True)
+    cpf = models.CharField(max_length=14, blank=True, null=True)
+    telefone = models.CharField(max_length=16, blank=True, null=True)
+    descricao = models.TextField(blank=True, null=True)
+    imagem = models.ImageField(upload_to='barbearias/', blank=True, null=True)
+    
     plano = models.CharField(
         max_length=20, 
         choices=[("free", "Grátis"), ("premium", "Premium")],

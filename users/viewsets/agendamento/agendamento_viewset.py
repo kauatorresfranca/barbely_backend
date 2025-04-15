@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from users.models import Agendamento, Funcionario
 from users.serializers import AgendamentoSerializer  # Usa o seu serializer normal
+from users.authentication import BarbeariaJWTAuthentication
 from datetime import datetime
 
 class AgendamentosDaBarbeariaView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [BarbeariaJWTAuthentication]
 
     def get(self, request):
         barbearia = request.user

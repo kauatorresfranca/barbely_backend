@@ -6,7 +6,7 @@ class BarbeariaSerializer(serializers.ModelSerializer):
         model = Barbearia
         fields = [
             'id', 'nome_barbearia', 'nome_proprietario', 'email', 'username',
-            'password', 'cnpj', 'plano', 'data_criacao', 'slug',
+            'password', 'cnpj', 'cpf', 'imagem', 'plano', 'data_criacao', 'slug', 'descricao', 'telefone',  # Adicionei 'descricao' aqui
         ]
         extra_kwargs = {
             'password': {'write_only': True}, 
