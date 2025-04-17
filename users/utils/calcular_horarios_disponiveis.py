@@ -30,7 +30,7 @@ def calcular_horarios_disponiveis(barbearia, funcionario, data, duracao_servico_
     agendamentos = Agendamento.objects.filter(
         funcionario=funcionario,
         data=data,
-        cancelado=False
+        status='CONFIRMADO'  # Corrigido: usa status='CONFIRMADO'
     )
 
     horarios_ocupados = []

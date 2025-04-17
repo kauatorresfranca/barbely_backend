@@ -24,7 +24,7 @@ class AgendamentosDaBarbeariaView(APIView):
         if data:
             try:
                 data_obj = datetime.strptime(data, "%Y-%m-%d").date()
-                agendamentos = agendamentos.filter(hora_inicio__date=data_obj)
+                agendamentos = agendamentos.filter(data=data_obj)
             except ValueError:
                 return Response({"erro": "Formato de data inválido. Use YYYY-MM-DD."}, status=400)
 

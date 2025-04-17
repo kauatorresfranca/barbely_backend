@@ -2,13 +2,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from users.viewsets.agendamento.agendamento_viewset import AgendamentosDaBarbeariaView
+from users.viewsets.agendamento.atualizar_status import AtualizarStatusAgendamentosView
 from users.viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet
 from users.viewsets.agendamento.create_viewset import CriarAgendamentoView
 from users.viewsets.agendamento.cancel_viewset import CancelarAgendamentoView
 from users.viewsets.agendamento.horarios_disponiveis_viewset import HorariosDisponiveisView
 from users.viewsets.barbearia.endereco_barbearia_viewset import EnderecoBarbeariaPublicView, EnderecoBarbeariaViewSet  
 from users.viewsets.barbearia.barbearia_viewset import BarbeariaViewSet
-from users.viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet  # ✅ nova importação
+from users.viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet
 from users.viewsets.horario_funcionamento_viewset import HorarioFuncionamentoViewSet
 from users.viewsets.cliente.cliente_viewset import ClienteViewSet
 from users.viewsets.cliente.cliente_user_viewset import ClienteLoginView, ClienteUserInfoView
@@ -19,11 +20,11 @@ from users.viewsets.servico_viewset import ServicoViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from django.conf import settings
-from django.conf.urls.static import static  # ✅ import adicionado
+from django.conf.urls.static import static
 
 router = DefaultRouter()
 router.register(r'barbearias', BarbeariaViewSet, basename='barbearia')
-router.register(r'barbearia-perfil', BarbeariaPerfilViewSet, basename='barbearia-perfil')  # ✅ nova rota
+router.register(r'barbearia-perfil', BarbeariaPerfilViewSet, basename='barbearia-perfil')
 router.register(r'horarios', HorarioFuncionamentoViewSet, basename='horariofuncionamento')
 router.register(r'clientes', ClienteViewSet, basename='clientes')
 router.register(r'funcionarios', FuncionarioViewSet, basename='funcionario')
@@ -41,6 +42,7 @@ urlpatterns = [
     path('agendamentos/criar/', CriarAgendamentoView.as_view(), name='criar-agendamento'),
     path('agendamentos/<int:pk>/cancelar/', CancelarAgendamentoView.as_view(), name='cancelar-agendamento'),
     path('agendamentos/horarios-disponiveis/', HorariosDisponiveisView.as_view(), name='horarios_disponiveis'),
+    path('agendamentos/atualizar-status/', AtualizarStatusAgendamentosView.as_view(), name='atualizar-status-agendamentos'),
     path('', include(router.urls)),
 ]
 

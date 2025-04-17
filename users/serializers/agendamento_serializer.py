@@ -1,13 +1,20 @@
 from rest_framework import serializers
-from users.models.agendamento import Agendamento, Servico, Funcionario
-from datetime import timedelta
+from users.models import Agendamento, Servico, Funcionario
 from datetime import datetime, timedelta
 
 class AgendamentoSerializer(serializers.ModelSerializer):
+    cliente_nome = serializers.CharField(source='cliente.nome', read_only=True)
+    servico_nome = serializers.CharField(source='servico.nome', read_only=True)
+    servico_duracao = serializers.IntegerField(source='servico.duracao_minutos', read_only=True)
+
     class Meta:
         model = Agendamento
-        fields = ['id', 'cliente', 'funcionario', 'servico', 'data', 'hora_inicio', 'cancelado', 'criado_em']
-        read_only_fields = ['cliente', 'cancelado', 'criado_em']
+        fields = [
+            'id', 'cliente', 'cliente_nome', 'funcionario', 'servico',
+            'servico_nome', 'servico_duracao', 'data', 'hora_inicio',
+            'status', 'criado_em'
+        ]
+        read_only_fields = ['id', 'cliente', 'cliente_nome', 'servico_nome', 'servico_duracao', 'status', 'criado_em']
 
     def validate(self, data):
         funcionario = data['funcionario']
@@ -22,9 +29,10 @@ class AgendamentoSerializer(serializers.ModelSerializer):
         datetime_inicio = datetime.combine(data_agendamento, hora_inicio)
         datetime_fim = datetime_inicio + timedelta(minutes=servico.duracao_minutos)
 
+        # Verifica conflitos de horário
         conflitos = Agendamento.objects.filter(
             funcionario=funcionario,
-            cancelado=False,
+            status__in=['CONFIRMADO', 'CONCLUIDO'],
             data=data_agendamento,
         ).exclude(
             hora_inicio__gte=datetime_fim.time()
@@ -36,4 +44,3 @@ class AgendamentoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Esse horário já está ocupado para o funcionário selecionado.")
 
         return data
-
