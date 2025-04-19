@@ -1,25 +1,23 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
-from users.viewsets.agendamento.agendamento_viewset import AgendamentosDaBarbeariaView
-from users.viewsets.agendamento.atualizar_status import AtualizarStatusAgendamentosView
-from users.viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet
-from users.viewsets.agendamento.create_viewset import CriarAgendamentoView
-from users.viewsets.agendamento.cancel_viewset import CancelarAgendamentoView
-from users.viewsets.agendamento.horarios_disponiveis_viewset import HorariosDisponiveisView
-from users.viewsets.barbearia.endereco_barbearia_viewset import EnderecoBarbeariaPublicView, EnderecoBarbeariaViewSet  
-from users.viewsets.barbearia.barbearia_viewset import BarbeariaViewSet
-from users.viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet
-from users.viewsets.cliente.cliente_agendamentos_viewset import ClienteAgendamentosView
-from users.viewsets.horario_funcionamento_viewset import HorarioFuncionamentoViewSet
-from users.viewsets.cliente.cliente_viewset import ClienteViewSet
-from users.viewsets.cliente.cliente_user_viewset import ClienteLoginView, ClienteUserInfoView
-from users.viewsets.clientes_da_barbearia_viewset import ClientesDaBarbeariaView
-from users.viewsets.funcionario_viewset import FuncionarioViewSet
-from users.viewsets.servico_viewset import ServicoViewSet
-
+from .viewsets.agendamento.agendamento_viewset import AgendamentosDaBarbeariaView
+from .viewsets.agendamento.atualizar_status import AtualizarStatusAgendamentosView
+from .viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet
+from .viewsets.agendamento.create_viewset import CriarAgendamentoView
+from .viewsets.agendamento.cancel_viewset import CancelarAgendamentoView
+from .viewsets.agendamento.horarios_disponiveis_viewset import HorariosDisponiveisView
+from .viewsets.barbearia.endereco_barbearia_viewset import EnderecoBarbeariaPublicView, EnderecoBarbeariaViewSet  
+from .viewsets.barbearia.barbearia_viewset import BarbeariaViewSet
+from .viewsets.cliente.cliente_agendamentos_viewset import ClienteAgendamentosView
+from .viewsets.horario_funcionamento_viewset import HorarioFuncionamentoViewSet
+from .viewsets.cliente.cliente_viewset import ClienteViewSet
+from .viewsets.cliente.cliente_user_viewset import ClienteLoginView, ClienteUserInfoView
+from .viewsets.clientes_da_barbearia_viewset import ClientesDaBarbeariaView
+from .viewsets.funcionario_viewset import FuncionarioViewSet
+from .viewsets.servico_viewset import ServicoViewSet
+from .viewsets.cliente.cliente_reset_password_viewset import PasswordResetRequestView, PasswordResetConfirmView
+from .viewsets.barbearia.barbearia_reset_password import BarbeariaPasswordResetRequestView, BarbeariaPasswordResetConfirmView
 from rest_framework_simplejwt.views import TokenRefreshView
-
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -45,9 +43,13 @@ urlpatterns = [
     path('agendamentos/<int:pk>/cancelar/', CancelarAgendamentoView.as_view(), name='cancelar-agendamento'),
     path('agendamentos/horarios-disponiveis/', HorariosDisponiveisView.as_view(), name='horarios_disponiveis'),
     path('agendamentos/atualizar-status/', AtualizarStatusAgendamentosView.as_view(), name='atualizar-status-agendamentos'),
+    path('clientes/password/reset/', PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('clientes/password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('barbearias/password/reset/', BarbeariaPasswordResetRequestView.as_view(), name='barbearia-password-reset-request'),
+    path('barbearias/password/reset/confirm/', BarbeariaPasswordResetConfirmView.as_view(), name='barbearia-password-reset-confirm'),
     path('', include(router.urls)),
 ]
 
-# ✅ Serve arquivos de mídia em modo de desenvolvimento
+# Serve arquivos de mídia em modo de desenvolvimento
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
