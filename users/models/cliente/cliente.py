@@ -1,6 +1,6 @@
 from django.db import models
-from users.models.barbearia import Barbearia
-from users.models.cliente_user import ClienteUser
+from users.models.barbearia.barbearia import Barbearia
+from users.models.cliente.cliente_user import ClienteUser
 
 class Cliente(models.Model):
     barbearia = models.ForeignKey(Barbearia, on_delete=models.CASCADE, related_name="clientes")

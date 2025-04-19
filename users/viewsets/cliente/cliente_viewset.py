@@ -1,8 +1,8 @@
-from rest_framework import viewsets, permissions, parsers
+from rest_framework import viewsets, permissions
 from rest_framework.exceptions import ValidationError
 from users.models import Cliente
-from users.models.barbearia_user import BarbeariaUser
-from users.models.cliente_user import ClienteUser
+from users.models.barbearia.barbearia_user import BarbeariaUser
+from users.models.cliente.cliente_user import ClienteUser
 from users.serializers import ClienteSerializer
 
 class IsOwnerOrReadOnly(permissions.BasePermission):

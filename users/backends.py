@@ -1,5 +1,5 @@
 from django.contrib.auth.backends import BaseBackend
-from users.models.cliente_user import ClienteUser
+from users.models.cliente.cliente_user import ClienteUser
 
 class ClienteBackend(BaseBackend):
     def authenticate(self, request, email=None, password=None, **kwargs):

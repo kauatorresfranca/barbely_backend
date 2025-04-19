@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.models.barbearia import Barbearia
-from users.serializers.barbearia_perfil_serializer import BarbeariaUpdateSerializer
+from users.models.barbearia.barbearia import Barbearia
+from users.serializers.barbearia.barbearia_perfil_serializer import BarbeariaUpdateSerializer
 from users.authentication import BarbeariaJWTAuthentication
 from django.utils.text import slugify
 

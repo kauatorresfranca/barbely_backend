@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users.models.cliente_user import ClienteUser
+from users.models.cliente.cliente_user import ClienteUser
 from rest_framework_simplejwt.tokens import RefreshToken
 
 class ClienteLoginSerializer(serializers.Serializer):

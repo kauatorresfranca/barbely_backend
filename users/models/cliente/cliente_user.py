@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
-from users.models.barbearia import Barbearia
+from users.models.barbearia.barbearia import Barbearia
 
 class ClienteUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):

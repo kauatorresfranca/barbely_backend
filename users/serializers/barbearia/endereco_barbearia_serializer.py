@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users.models.endereco_barbearia import EnderecoBarbearia
+from users.models.barbearia.endereco_barbearia import EnderecoBarbearia
 
 class EnderecoBarbeariaSerializer(serializers.ModelSerializer):
     class Meta:

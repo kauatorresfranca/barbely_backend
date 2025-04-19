@@ -1,10 +1,10 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from users.models import HorarioFuncionamento
-from users.serializers.horario_funcionamento_serializer import HorarioFuncionamentoSerializer
+from users.serializers.barbearia.horario_funcionamento_serializer import HorarioFuncionamentoSerializer
 
 
 class HorarioFuncionamentoViewSet(viewsets.ModelViewSet):
