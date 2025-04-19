@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models.barbearia import Barbearia
-from .models.horario_funcionamento import HorarioFuncionamento
+from .models.barbearia.barbearia import Barbearia
+from .models.barbearia.horario_funcionamento import HorarioFuncionamento
 
 @receiver(post_save, sender=Barbearia)
 def criar_horarios_padrao(sender, instance, created, **kwargs):

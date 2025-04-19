@@ -4,9 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from users.authentication import BarbeariaJWTAuthentication
-from users.models.endereco_barbearia import EnderecoBarbearia
-from users.models.barbearia import Barbearia
-from users.serializers.endereco_barbearia_serializer import EnderecoBarbeariaSerializer
+from users.models.barbearia.endereco_barbearia import EnderecoBarbearia
+from users.models.barbearia.barbearia import Barbearia
+from users.serializers.barbearia.endereco_barbearia_serializer import EnderecoBarbeariaSerializer
 
 
 class EnderecoBarbeariaViewSet(viewsets.ModelViewSet):

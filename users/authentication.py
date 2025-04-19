@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from users.models.cliente_user import ClienteUser
+from users.models.cliente.cliente_user import ClienteUser
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from users.models import Barbearia
 from rest_framework.exceptions import AuthenticationFailed

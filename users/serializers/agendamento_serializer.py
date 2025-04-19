@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users.models import Agendamento, Servico, Funcionario
+from users.models import Agendamento
 from datetime import datetime, timedelta
 
 class AgendamentoSerializer(serializers.ModelSerializer):

@@ -1,5 +1,7 @@
-from .barbearia_serializer import BarbeariaSerializer
-from .cliente_serializer import ClienteSerializer
+from .barbearia.barbearia_serializer import BarbeariaSerializer
+from .cliente.cliente_serializer import ClienteSerializer
 from .agendamento_serializer import AgendamentoSerializer
-from .horario_funcionamento_serializer import HorarioFuncionamento
-from .cliente_user_serializer import ClienteLoginSerializer
+from .barbearia.horario_funcionamento_serializer import HorarioFuncionamento
+from .cliente.cliente_user_serializer import ClienteLoginSerializer
+from .cliente.reset_password import PasswordResetConfirmSerializer, PasswordResetRequestSerializer
+from .barbearia.reset_password import BarbeariaPasswordResetRequestSerializer, BarbeariaPasswordResetConfirmSerializer
