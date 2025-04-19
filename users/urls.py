@@ -10,6 +10,7 @@ from users.viewsets.agendamento.horarios_disponiveis_viewset import HorariosDisp
 from users.viewsets.barbearia.endereco_barbearia_viewset import EnderecoBarbeariaPublicView, EnderecoBarbeariaViewSet  
 from users.viewsets.barbearia.barbearia_viewset import BarbeariaViewSet
 from users.viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet
+from users.viewsets.cliente.cliente_agendamentos_viewset import ClienteAgendamentosView
 from users.viewsets.horario_funcionamento_viewset import HorarioFuncionamentoViewSet
 from users.viewsets.cliente.cliente_viewset import ClienteViewSet
 from users.viewsets.cliente.cliente_user_viewset import ClienteLoginView, ClienteUserInfoView
@@ -39,6 +40,7 @@ urlpatterns = [
     path("endereco-barbearia-publico/<slug:slug>/", EnderecoBarbeariaPublicView.as_view(), name="endereco-barbearia-publico"),
     path('clientes/user-info/', ClienteUserInfoView.as_view(), name='cliente-user-info'),
     path('clientes/barbearia/<int:barbearia_id>/', ClientesDaBarbeariaView.as_view(), name='clientes-da-barbearia'),
+    path('clientes/agendamentos/', ClienteAgendamentosView.as_view(), name='cliente-agendamentos'),
     path('agendamentos/criar/', CriarAgendamentoView.as_view(), name='criar-agendamento'),
     path('agendamentos/<int:pk>/cancelar/', CancelarAgendamentoView.as_view(), name='cancelar-agendamento'),
     path('agendamentos/horarios-disponiveis/', HorariosDisponiveisView.as_view(), name='horarios_disponiveis'),

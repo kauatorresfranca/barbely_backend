@@ -8,4 +8,9 @@ class Cliente(models.Model):
     imagem = models.ImageField(upload_to='clientes/', null=True, blank=True)
 
     def __str__(self):
-        return f"{self.nome} ({self.barbearia.nome_barbearia})"
+        try:
+            nome = self.user.nome if self.user and self.user.nome else "Cliente sem nome"
+            barbearia_nome = self.barbearia.nome_barbearia if self.barbearia else "Barbearia não especificada"
+            return f"{nome} ({barbearia_nome})"
+        except Exception as e:
+            return f"Cliente (Erro: {str(e)})"

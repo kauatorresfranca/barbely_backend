@@ -3,9 +3,9 @@ from users.models import Agendamento, Servico, Funcionario
 from datetime import datetime, timedelta
 
 class AgendamentoSerializer(serializers.ModelSerializer):
-    cliente_nome = serializers.CharField(source='cliente.nome', read_only=True)
-    servico_nome = serializers.CharField(source='servico.nome', read_only=True)
-    servico_duracao = serializers.IntegerField(source='servico.duracao_minutos', read_only=True)
+    cliente_nome = serializers.SerializerMethodField()
+    servico_nome = serializers.SerializerMethodField()
+    servico_duracao = serializers.SerializerMethodField()
 
     class Meta:
         model = Agendamento
@@ -15,6 +15,30 @@ class AgendamentoSerializer(serializers.ModelSerializer):
             'status', 'criado_em'
         ]
         read_only_fields = ['id', 'cliente', 'cliente_nome', 'servico_nome', 'servico_duracao', 'status', 'criado_em']
+
+    def get_cliente_nome(self, obj):
+        try:
+            if obj.cliente and obj.cliente.user:
+                return obj.cliente.user.nome or "Nome não disponível"
+            return "Cliente não disponível"
+        except Exception as e:
+            return f"Erro ao acessar nome do cliente: {str(e)}"
+
+    def get_servico_nome(self, obj):
+        try:
+            if obj.servico:
+                return obj.servico.nome or "Serviço não disponível"
+            return "Serviço não disponível"
+        except Exception as e:
+            return f"Erro ao acessar nome do serviço: {str(e)}"
+
+    def get_servico_duracao(self, obj):
+        try:
+            if obj.servico:
+                return obj.servico.duracao_minutos or 0
+            return 0
+        except Exception as e:
+            return f"Erro ao acessar duração do serviço: {str(e)}"
 
     def validate(self, data):
         funcionario = data['funcionario']

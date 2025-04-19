@@ -53,7 +53,7 @@ class CriarAgendamentoView(APIView):
         # Buscar Cliente
         try:
             cliente = Cliente.objects.get(user=cliente_user, barbearia=servico.barbearia)
-            logger.debug(f"Cliente encontrado: {cliente}")
+            logger.debug(f"Cliente encontrado: {cliente}, Nome: {cliente.user.nome}")
         except Cliente.DoesNotExist:
             logger.error(f"Cliente não registrado para barbearia: {servico.barbearia}")
             return Response(
