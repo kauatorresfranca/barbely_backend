@@ -8,3 +8,4 @@ from .funcionario import Funcionario
 from .servico import Servico
 from .barbearia.barbearia_user import BarbeariaUser
 from .barbearia.reset_password import BarbeariaPasswordResetToken
+from .custo import Custo

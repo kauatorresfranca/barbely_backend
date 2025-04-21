@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .viewsets.agendamento.agendamento_viewset import AgendamentosDaBarbeariaView
-from .viewsets.agendamento.atualizar_status import AtualizarStatusAgendamentosView
+
+from .viewsets.barbearia.custo_viewset import CustoViewSet
+from .viewsets.agendamento.agendamento_da_barbearia_viewset import AgendamentosDaBarbeariaView
 from .viewsets.barbearia.barbearia_perfil_viewset import BarbeariaPerfilViewSet
 from .viewsets.agendamento.create_viewset import CriarAgendamentoView
 from .viewsets.agendamento.cancel_viewset import CancelarAgendamentoView
@@ -17,6 +18,8 @@ from .viewsets.funcionario_viewset import FuncionarioViewSet
 from .viewsets.servico_viewset import ServicoViewSet
 from .viewsets.cliente.cliente_reset_password_viewset import PasswordResetRequestView, PasswordResetConfirmView
 from .viewsets.barbearia.barbearia_reset_password import BarbeariaPasswordResetRequestView, BarbeariaPasswordResetConfirmView
+from .viewsets.barbearia.overview_viewset import OverviewMetricsView
+from .viewsets.agendamento.agentamento_viewset import AgendamentoViewSet  # Importar o AgendamentoViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -29,6 +32,8 @@ router.register(r'clientes', ClienteViewSet, basename='clientes')
 router.register(r'funcionarios', FuncionarioViewSet, basename='funcionario')
 router.register(r'servicos', ServicoViewSet, basename='servico')
 router.register(r'endereco-barbearia', EnderecoBarbeariaViewSet, basename='endereco-barbearia')
+router.register(r'custos', CustoViewSet, basename='custos')
+router.register(r'agendamentos', AgendamentoViewSet, basename='agendamento')  # Registrar o AgendamentoViewSet
 
 urlpatterns = [
     path('clientes/login/', ClienteLoginView.as_view(), name='cliente-login'),
@@ -42,14 +47,13 @@ urlpatterns = [
     path('agendamentos/criar/', CriarAgendamentoView.as_view(), name='criar-agendamento'),
     path('agendamentos/<int:pk>/cancelar/', CancelarAgendamentoView.as_view(), name='cancelar-agendamento'),
     path('agendamentos/horarios-disponiveis/', HorariosDisponiveisView.as_view(), name='horarios_disponiveis'),
-    path('agendamentos/atualizar-status/', AtualizarStatusAgendamentosView.as_view(), name='atualizar-status-agendamentos'),
     path('clientes/password/reset/', PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('clientes/password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('barbearias/password/reset/', BarbeariaPasswordResetRequestView.as_view(), name='barbearia-password-reset-request'),
     path('barbearias/password/reset/confirm/', BarbeariaPasswordResetConfirmView.as_view(), name='barbearia-password-reset-confirm'),
+    path('barbearias/overview/', OverviewMetricsView.as_view(), name='overview-metrics'),
     path('', include(router.urls)),
 ]
 
-# Serve arquivos de mídia em modo de desenvolvimento
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
-from users.models.barbearia.barbearia import Barbearia
+from django.utils import timezone
 
 class ClienteUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -23,6 +23,7 @@ class ClienteUser(AbstractBaseUser, PermissionsMixin):
     telefone = models.CharField(max_length=15, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=timezone.now)  # Novo campo
 
     groups = models.ManyToManyField(
         'auth.Group',
