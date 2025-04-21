@@ -14,7 +14,7 @@ class AgendamentoSerializer(serializers.ModelSerializer):
             'servico_nome', 'servico_duracao', 'data', 'hora_inicio',
             'status', 'criado_em'
         ]
-        read_only_fields = ['id', 'cliente', 'cliente_nome', 'servico_nome', 'servico_duracao', 'status', 'criado_em']
+        read_only_fields = ['id', 'cliente_nome', 'servico_nome', 'servico_duracao', 'criado_em']
 
     def get_cliente_nome(self, obj):
         try:
@@ -41,30 +41,51 @@ class AgendamentoSerializer(serializers.ModelSerializer):
             return f"Erro ao acessar duração do serviço: {str(e)}"
 
     def validate(self, data):
-        funcionario = data['funcionario']
-        servico = data['servico']
-        hora_inicio = data['hora_inicio']
-        data_agendamento = data.get('data')
+        # Tornar validações condicionais para suportar atualizações parciais (PATCH)
+        if self.context['request'].method == 'PATCH' and 'status' in data:
+            # Para atualizações parciais que só alteram o status, não exigir outros campos
+            return data
 
-        if not data_agendamento:
-            raise serializers.ValidationError("A data do agendamento é obrigatória.")
+        # Validar apenas se os campos necessários estão presentes
+        if all(key in data for key in ['funcionario', 'servico', 'hora_inicio', 'data']):
+            funcionario = data['funcionario']
+            servico = data['servico']
+            hora_inicio = data['hora_inicio']
+            data_agendamento = data['data']
 
-        # Combina data + hora_inicio
-        datetime_inicio = datetime.combine(data_agendamento, hora_inicio)
-        datetime_fim = datetime_inicio + timedelta(minutes=servico.duracao_minutos)
+            # Combina data + hora_inicio
+            datetime_inicio = datetime.combine(data_agendamento, hora_inicio)
+            datetime_fim = datetime_inicio + timedelta(minutes=servico.duracao_minutos)
 
-        # Verifica conflitos de horário
-        conflitos = Agendamento.objects.filter(
-            funcionario=funcionario,
-            status__in=['CONFIRMADO', 'CONCLUIDO'],
-            data=data_agendamento,
-        ).exclude(
-            hora_inicio__gte=datetime_fim.time()
-        ).exclude(
-            hora_inicio__lt=hora_inicio
-        )
+            # Verifica conflitos de horário
+            conflitos = Agendamento.objects.filter(
+                funcionario=funcionario,
+                status__in=['CONFIRMADO', 'CONCLUIDO'],
+                data=data_agendamento,
+            ).exclude(
+                hora_inicio__gte=datetime_fim.time()
+            ).exclude(
+                hora_inicio__lt=hora_inicio
+            )
 
-        if conflitos.exists():
-            raise serializers.ValidationError("Esse horário já está ocupado para o funcionário selecionado.")
+            # Excluir o próprio agendamento da verificação, se for uma atualização
+            if self.instance:
+                conflitos = conflitos.exclude(id=self.instance.id)
+
+            if conflitos.exists():
+                raise serializers.ValidationError(
+                    "Esse horário já está ocupado para o funcionário selecionado."
+                )
+
+        else:
+            # Se algum campo obrigatório está faltando em uma criação ou atualização completa
+            missing_fields = [
+                key for key in ['funcionario', 'servico', 'hora_inicio', 'data']
+                if key not in data
+            ]
+            if missing_fields and self.context['request'].method != 'PATCH':
+                raise serializers.ValidationError(
+                    f"Os seguintes campos são obrigatórios: {', '.join(missing_fields)}"
+                )
 
         return data

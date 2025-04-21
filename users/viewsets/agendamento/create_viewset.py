@@ -32,13 +32,7 @@ class CriarAgendamentoView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Validar dados do request
-        serializer = AgendamentoSerializer(data=request.data)
-        if not serializer.is_valid():
-            logger.debug(f"Erros de validação: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        # Obter serviço
+        # Buscar Cliente
         servico_id = request.data.get('servico')
         try:
             servico = Servico.objects.get(id=servico_id)
@@ -50,7 +44,6 @@ class CriarAgendamentoView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Buscar Cliente
         try:
             cliente = Cliente.objects.get(user=cliente_user, barbearia=servico.barbearia)
             logger.debug(f"Cliente encontrado: {cliente}, Nome: {cliente.user.nome}")
@@ -61,26 +54,16 @@ class CriarAgendamentoView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Criar agendamento manualmente para evitar problemas com o serializer
-        try:
-            agendamento_data = serializer.validated_data
-            agendamento = Agendamento(
-                cliente=cliente,
-                funcionario=agendamento_data['funcionario'],
-                servico=agendamento_data['servico'],
-                data=agendamento_data['data'],
-                hora_inicio=agendamento_data['hora_inicio'],
-                status='CONFIRMADO'
-            )
-            agendamento.save()
-            logger.info(f"Agendamento criado: {agendamento.id}")
-            return Response(
-                AgendamentoSerializer(agendamento).data,
-                status=status.HTTP_201_CREATED
-            )
-        except Exception as e:
-            logger.error(f"Erro ao salvar agendamento: {str(e)}")
-            return Response(
-                {"detail": f"Erro ao criar agendamento: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # Adicionar o ID do cliente ao payload
+        data = request.data.copy()  # Criar uma cópia mutável dos dados
+        data['cliente'] = cliente.id
+
+        # Validar e salvar o agendamento usando o serializer
+        serializer = AgendamentoSerializer(data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            logger.info(f"Agendamento criado: {serializer.data['id']}")
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            logger.error(f"Erros de validação: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
