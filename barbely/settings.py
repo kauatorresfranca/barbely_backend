@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-7&=_q9_3b&94es1un$tinf#o)h0good^7-y5=x+5a1u)l3jxf&"
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-7&=_q9_3b&94es1un$tinf#o)h0good^7-y5=x+5a1u)l3jxf&")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    # Adicione o domínio do Render aqui após criar o serviço, ex.: "barbely.onrender.com"
+    os.getenv("RENDER_EXTERNAL_HOSTNAME", ""),
+]
 
 # Application definition
 
@@ -78,15 +84,13 @@ WSGI_APPLICATION = "barbely.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Configuração para usar o banco de dados do Render (PostgreSQL)
+# O Render fornece a variável de ambiente DATABASE_URL
 DATABASES = {
-    "default": {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'barberly_db',
-        'USER': 'postgres',
-        'PASSWORD': '3355',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    "default": dj_database_url.config(
+        default="postgresql://postgres:3355@localhost:5432/barberly_db",
+        conn_max_age=600,
+    )
 }
 
 # Password validation
@@ -121,66 +125,66 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # O Render precisa disso para coletar arquivos estáticos
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://barbely.vercel.app"
+    "https://barbely.vercel.app",
 ]
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'kauatorresfranca2@gmail.com'
-EMAIL_HOST_PASSWORD = 'ynnn tktj hrww suts'
-DEFAULT_FROM_EMAIL = 'kauatorresfranca2@gmail.com'
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "kauatorresfranca2@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "ynnn tktj hrww suts")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "kauatorresfranca2@gmail.com")
 
 # Frontend URL for password reset links
-FRONTEND_URL = 'http://localhost:5173'
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-AUTH_USER_MODEL = 'users.Barbearia'
+AUTH_USER_MODEL = "users.Barbearia"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'users.authentication.ClienteJWTAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "users.authentication.ClienteJWTAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.AllowAny",
     ),
 }
 
 AUTHENTICATION_BACKENDS = [
-    'users.backends.ClienteBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    "users.backends.ClienteBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'loggers': {
-        '': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
+    "loggers": {
+        "": {
+            "handlers": ["console"],
+            "level": "DEBUG",
         },
     },
 }
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
