@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+import logging
+
+# Configuração de logging para depuração
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +33,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    # Adicione o domínio do Render aqui após criar o serviço, ex.: "barbely.onrender.com"
+    "barbely.onrender.com",  # Adicione o domínio do Render aqui
     os.getenv("RENDER_EXTERNAL_HOSTNAME", ""),
 ]
 
@@ -50,9 +54,22 @@ INSTALLED_APPS = [
     "django_filters",
 ]
 
+# Middleware personalizado para depurar headers
+class LogHeadersMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        logger.info(f"Request Method: {request.method}, Path: {request.path}")
+        logger.info(f"Request Origin: {request.headers.get('Origin')}")
+        response = self.get_response(request)
+        logger.info(f"Response Headers: {response.headers}")
+        return response
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "barbely.middleware.LogHeadersMiddleware",  # Adicione o middleware de depuração
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -84,8 +101,6 @@ WSGI_APPLICATION = "barbely.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Configuração para usar o banco de dados do Render (PostgreSQL)
-# O Render fornece a variável de ambiente DATABASE_URL
 DATABASES = {
     "default": dj_database_url.config(
         default="postgresql://postgres:3355@localhost:5432/barberly_db",
@@ -137,6 +152,26 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://barbely.vercel.app",
+]
+CORS_ALLOW_CREDENTIALS = True  # Permite enviar tokens no header Authorization
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 # Email settings
