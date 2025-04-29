@@ -29,7 +29,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "barbely.onrender.com",  # Adicione o domínio do Render aqui
+    "barbely.onrender.com",
     os.getenv("RENDER_EXTERNAL_HOSTNAME", ""),
 ]
 
@@ -53,7 +53,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "barbely.middleware.LogHeadersMiddleware",  # Referencia o middleware corretamente
+    "barbely.middleware.LogHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -125,7 +125,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # O Render precisa disso para coletar arquivos estáticos
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Media files
 MEDIA_URL = "/media/"
@@ -137,7 +137,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://barbely.vercel.app",
 ]
-CORS_ALLOW_CREDENTIALS = True  # Permite enviar tokens no header Authorization
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
