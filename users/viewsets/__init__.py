@@ -1,6 +1,6 @@
 from .agendamento.cancel_viewset import CancelarAgendamentoView
 from .agendamento.create_viewset import CriarAgendamentoView
-from .agendamento.agendamento_viewset import AgendamentosDaBarbeariaView
+from .agendamento.agendamento_da_barbearia_viewset import AgendamentosDaBarbeariaView
 from .agendamento.horarios_disponiveis_viewset import calcular_horarios_disponiveis
 
 from .barbearia.barbearia_user_viewset import BarbeariaUserInfoView
