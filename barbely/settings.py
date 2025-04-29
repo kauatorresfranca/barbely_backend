@@ -30,7 +30,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "barbely.onrender.com",
+    "barbely-backend.onrender.com",  # URL corrigido
     os.getenv("RENDER_EXTERNAL_HOSTNAME", ""),
 ]
 
