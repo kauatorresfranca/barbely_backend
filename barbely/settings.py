@@ -13,10 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
-import logging
-
-# Configuração de logging para depuração
-logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,22 +50,10 @@ INSTALLED_APPS = [
     "django_filters",
 ]
 
-# Middleware personalizado para depurar headers
-class LogHeadersMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        logger.info(f"Request Method: {request.method}, Path: {request.path}")
-        logger.info(f"Request Origin: {request.headers.get('Origin')}")
-        response = self.get_response(request)
-        logger.info(f"Response Headers: {response.headers}")
-        return response
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "barbely.middleware.LogHeadersMiddleware",  # Adicione o middleware de depuração
+    "barbely.middleware.LogHeadersMiddleware",  # Referencia o middleware corretamente
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
