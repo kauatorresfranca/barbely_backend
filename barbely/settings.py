@@ -14,6 +14,9 @@ from pathlib import Path
 import os
 import dj_database_url
 import logging
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +52,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "django_filters",
+    "cloudinary",  # Adiciona o app da Cloudinary
+    "cloudinary_storage",  # Adiciona o app para armazenamento
 ]
 
 MIDDLEWARE = [
@@ -129,6 +134,16 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Media files
+# Configuração para Cloudinary
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dtqpej5qg',
+    'API_KEY': '367761293837479',
+    'API_SECRET': 'zKlny1-C2DTP7rnr0poH-xgmx9U',
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Mantém as configurações locais para referência, mas não serão usadas com Cloudinary
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
