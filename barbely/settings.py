@@ -14,9 +14,12 @@ from pathlib import Path
 import os
 import dj_database_url
 import logging
+from decouple import config
 import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+
+# Configuração de logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,16 +28,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-7&=_q9_3b&94es1un$tinf#o)h0good^7-y5=x+5a1u)l3jxf&")
+SECRET_KEY = config('SECRET_KEY', default="django-insecure-7&=_q9_3b&94es1un$tinf#o)h0good^7-y5=x+5a1u)l3jxf&")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = config('DEBUG', default="False", cast=bool)
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "barbely-backend.onrender.com",
-    os.getenv("RENDER_EXTERNAL_HOSTNAME", ""),
+    config('RENDER_EXTERNAL_HOSTNAME', default=""),
 ]
 
 # Application definition
@@ -52,8 +55,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "django_filters",
-    "cloudinary",  # Adiciona o app da Cloudinary
-    "cloudinary_storage",  # Adiciona o app para armazenamento
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
 MIDDLEWARE = [
@@ -134,14 +137,27 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Media files
-# Configuração para Cloudinary
+# Configuração para Cloudinary usando variáveis de ambiente
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dtqpej5qg',
-    'API_KEY': '367761293837479',
-    'API_SECRET': 'zKlny1-C2DTP7rnr0poH-xgmx9U',
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default='dtqpej5qg'),
+    'API_KEY': config('CLOUDINARY_API_KEY', default='367761293837479'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET', default='zKlny1-C2DTP7rnr0poH-xgmx9U'),
 }
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# Inicializa a Cloudinary
+try:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+        api_key=CLOUDINARY_STORAGE['API_KEY'],
+        api_secret=CLOUDINARY_STORAGE['API_SECRET'],
+        secure=True
+    )
+    logger.info(f"Cloudinary configurada com sucesso: {CLOUDINARY_STORAGE['CLOUD_NAME']}")
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+except Exception as e:
+    logger.error(f"Falha ao configurar Cloudinary: {str(e)}")
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'  # Fallback local
+    logger.info("Usando armazenamento local como fallback devido a erro na configuração")
 
 # Mantém as configurações locais para referência, mas não serão usadas com Cloudinary
 MEDIA_URL = "/media/"
@@ -179,12 +195,12 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "kauatorresfranca2@gmail.com")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "ynnn tktj hrww suts")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "kauatorresfranca2@gmail.com")
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default="kauatorresfranca2@gmail.com")
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default="ynnn tktj hrww suts")
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default="kauatorresfranca2@gmail.com")
 
 # Frontend URL for password reset links
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = config('FRONTEND_URL', default="http://localhost:5173")
 
 AUTH_USER_MODEL = "users.Barbearia"
 
@@ -221,6 +237,11 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "cloudinary": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
 }
 
@@ -230,5 +251,4 @@ LOGGING = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Adiciona log para verificar CORS
-logger = logging.getLogger(__name__)
 logger.info(f"CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")

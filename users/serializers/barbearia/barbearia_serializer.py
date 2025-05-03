@@ -2,14 +2,17 @@ from rest_framework import serializers
 from users.models import Barbearia
 
 class BarbeariaSerializer(serializers.ModelSerializer):
+    # Definimos 'imagem' como read_only para evitar que o serializer tente validá-lo ou atualizá-lo
+    imagem = serializers.CharField(read_only=True)
+
     class Meta:
         model = Barbearia
         fields = [
             'id', 'nome_barbearia', 'nome_proprietario', 'email', 'username',
-            'password', 'cnpj', 'cpf', 'imagem', 'plano', 'data_criacao', 'slug', 'descricao', 'telefone',  # Adicionei 'descricao' aqui
+            'password', 'cnpj', 'cpf', 'imagem', 'plano', 'data_criacao', 'slug', 'descricao', 'telefone'
         ]
         extra_kwargs = {
-            'password': {'write_only': True}, 
+            'password': {'write_only': True},
             'username': {'required': False},
         }
 
@@ -30,6 +33,6 @@ class BarbeariaSerializer(serializers.ModelSerializer):
         senha_plana = validated_data.pop("password", None)
         barbearia = Barbearia(**validated_data)
         if senha_plana:
-            barbearia.set_password(senha_plana)  # ✅ Senha criptografada corretamente
+            barbearia.set_password(senha_plana)
         barbearia.save()
         return barbearia

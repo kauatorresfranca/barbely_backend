@@ -26,10 +26,10 @@ class Barbearia(AbstractUser):
     cpf = models.CharField(max_length=14, blank=True, null=True)
     telefone = models.CharField(max_length=16, blank=True, null=True)
     descricao = models.TextField(blank=True, null=True)
-    imagem = models.ImageField(upload_to='barbearias/', blank=True, null=True)
-    
+    imagem = models.CharField(max_length=500, blank=True, null=True)  # Alterado para CharField para armazenar URL
+
     plano = models.CharField(
-        max_length=20, 
+        max_length=20,
         choices=[("free", "Grátis"), ("premium", "Premium")],
         default="free"
     )
