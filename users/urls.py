@@ -43,7 +43,6 @@ urlpatterns = [
     path("endereco-barbearia-publico/<slug:slug>/", EnderecoBarbeariaPublicView.as_view(), name="endereco-barbearia-publico"),
     path('clientes/user-info/', ClienteUserInfoView.as_view(), name='cliente-user-info'),
     path('clientes/barbearia/<int:barbearia_id>/', ClientesDaBarbeariaView.as_view(), name='clientes-da-barbearia'),
-    path('clientes/<int:cliente_id>/', ClienteDetailView.as_view(), name='cliente-detail'),
     path('clientes/agendamentos/', ClienteAgendamentosView.as_view(), name='cliente-agendamentos'),
     path('barbearia/agendamentos/criar/', BarbeariaCriarAgendamentoView.as_view(), name='barbearia-criar-agendamento'),
     path('agendamentos/criar/', CriarAgendamentoView.as_view(), name='criar-agendamento'),
