@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from users.models import Cliente, ClienteUser
 import logging
+from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +25,22 @@ class ClienteUserSerializer(serializers.ModelSerializer):
     def validate(self, data):
         logger.debug(f"Validating user data: {data}")
         if self.instance:  # Atualização
-            email = data.get('email', self.instance.email)
-            telefone = data.get('telefone', self.instance.telefone)
-            # Ignorar validação de unicidade se o email não mudou
-            if email != self.instance.email and ClienteUser.objects.filter(email=email).exists():
-                raise serializers.ValidationError({"email": "Cliente user with this email already exists."})
-            if telefone != self.instance.telefone and ClienteUser.objects.filter(telefone=telefone).exists():
-                raise serializers.ValidationError({"telefone": "Cliente user with this telefone already exists."})
+            # Obter os valores atuais da instância
+            current_email = self.instance.email
+            current_telefone = self.instance.telefone
+
+            # Verificar se o email foi fornecido e se mudou
+            email = data.get('email')
+            if email is not None and email != current_email:
+                if ClienteUser.objects.exclude(id=self.instance.id).filter(email=email).exists():
+                    raise serializers.ValidationError({"email": "Cliente user with this email already exists."})
+
+            # Verificar se o telefone foi fornecido e se mudou
+            telefone = data.get('telefone')
+            if telefone is not None and telefone != current_telefone:
+                if ClienteUser.objects.exclude(id=self.instance.id).filter(telefone=telefone).exists():
+                    raise serializers.ValidationError({"telefone": "Cliente user with this telefone already exists."})
+
         return data
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -89,3 +99,34 @@ class ClienteSerializer(serializers.ModelSerializer):
         representation['fotoPerfil'] = instance.imagem.url if instance.imagem else None
         logger.debug(f"Returning representation: {representation}")
         return representation
+
+class ClienteLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        try:
+            user = ClienteUser.objects.get(email=email)
+        except ClienteUser.DoesNotExist:
+            raise serializers.ValidationError("Usuário não encontrado.")
+
+        if not user.check_password(password):
+            raise serializers.ValidationError("Senha incorreta.")
+
+        if not user.is_active:
+            raise serializers.ValidationError("Conta inativa.")
+
+        refresh = RefreshToken.for_user(user)
+        return {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "nome": user.nome,
+                "telefone": user.telefone
+            }
+        }
