@@ -8,12 +8,13 @@ logger = logging.getLogger(__name__)
 class ClienteUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClienteUser
-        fields = ['email', 'nome', 'telefone', 'password']
+        fields = ['email', 'nome', 'telefone', 'password', 'date_joined']
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
             'email': {'required': False},
             'nome': {'required': False},
             'telefone': {'required': False},
+            'date_joined': {'read_only': True},
         }
 
     def validate_telefone(self, value):
@@ -24,18 +25,15 @@ class ClienteUserSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         logger.debug(f"Validating user data: {data}")
-        if self.instance:  # Atualização
-            # Obter os valores atuais da instância
+        if self.instance:
             current_email = self.instance.email
             current_telefone = self.instance.telefone
 
-            # Verificar se o email foi fornecido e se mudou
             email = data.get('email')
             if email is not None and email != current_email:
                 if ClienteUser.objects.exclude(id=self.instance.id).filter(email=email).exists():
                     raise serializers.ValidationError({"email": "Cliente user with this email already exists."})
 
-            # Verificar se o telefone foi fornecido e se mudou
             telefone = data.get('telefone')
             if telefone is not None and telefone != current_telefone:
                 if ClienteUser.objects.exclude(id=self.instance.id).filter(telefone=telefone).exists():
@@ -127,6 +125,7 @@ class ClienteLoginSerializer(serializers.Serializer):
                 "id": user.id,
                 "email": user.email,
                 "nome": user.nome,
-                "telefone": user.telefone
+                "telefone": user.telefone,
+                "date_joined": user.date_joined
             }
         }
