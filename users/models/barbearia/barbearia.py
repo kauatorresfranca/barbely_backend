@@ -9,7 +9,7 @@ class BarbeariaManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save()
+        user.save(using=self._db)
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
@@ -26,14 +26,17 @@ class Barbearia(AbstractUser):
     cpf = models.CharField(max_length=14, blank=True, null=True)
     telefone = models.CharField(max_length=16, blank=True, null=True)
     descricao = models.TextField(blank=True, null=True)
-    imagem = models.CharField(max_length=500, blank=True, null=True)  # Alterado para CharField para armazenar URL
-
+    imagem = models.CharField(max_length=500, blank=True, null=True)  # Armazena URL
     plano = models.CharField(
         max_length=20,
         choices=[("free", "Grátis"), ("premium", "Premium")],
         default="free"
     )
     data_criacao = models.DateTimeField(auto_now_add=True)
+    pix = models.BooleanField(default=True)
+    credit_card = models.BooleanField(default=True)
+    debit_card = models.BooleanField(default=True)
+    cash = models.BooleanField(default=True)
 
     groups = models.ManyToManyField(
         'auth.Group',
@@ -52,7 +55,7 @@ class Barbearia(AbstractUser):
     objects = BarbeariaManager()
 
     def save(self, *args, **kwargs):
-        if not self.slug:
+        if not self.slug and self.nome_barbearia:
             base_slug = slugify(self.nome_barbearia)
             unique_slug = base_slug
             contador = 1

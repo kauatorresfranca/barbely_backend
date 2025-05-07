@@ -21,7 +21,7 @@ class BarbeariaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        if self.action in ['login', 'buscar_por_slug', 'create', 'list']:
+        if self.action in ['login', 'buscar_por_slug', 'create', 'list', 'metodos_pagamento']:
             return []
         return super().get_permissions()
 
@@ -50,16 +50,34 @@ class BarbeariaViewSet(viewsets.ModelViewSet):
         serializer = BarbeariaSerializer(barbearia)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='metodos-pagamento')
+    def metodos_pagamento(self, request):
+        slug = request.query_params.get('barbearia_slug')
+        if not slug:
+            return Response({"error": "Parâmetro 'barbearia_slug' é obrigatório"}, status=status.HTTP_400_BAD_REQUEST)
+        barbearia = get_object_or_404(Barbearia, slug=slug)
+        data = {
+            'pix': barbearia.pix,
+            'credit_card': barbearia.credit_card,
+            'debit_card': barbearia.debit_card,
+            'cash': barbearia.cash
+        }
+        logger.info(f"Valores retornados em metodos_pagamento (banco): {data}")
+        return Response(data)
+
     def update(self, request, *args, **kwargs):
         barbearia = self.get_object()
         logger.info(f"Dados recebidos para atualização (request.data): {request.data}")
-        logger.info(f"Arquivos recebidos (request.FILES): {dict(request.FILES)}")
-        logger.info(f"Conteúdo de request.FILES.items(): {list(request.FILES.items())}")
-        logger.info(f"request.FILES está vazio? {len(request.FILES) == 0}")
 
-        # Cria uma cópia dos dados para o serializer, excluindo a chave 'imagem'
-        data_to_serialize = {key: value for key, value in request.data.items() if key != 'imagem'}
-        logger.info(f"Dados para o serializer (sem imagem): {data_to_serialize}")
+        # Atualiza os campos de pagamento diretamente
+        if 'pix' in request.data:
+            barbearia.pix = request.data['pix'] == 'true' or request.data['pix'] is True
+        if 'credit_card' in request.data:
+            barbearia.credit_card = request.data['credit_card'] == 'true' or request.data['credit_card'] is True
+        if 'debit_card' in request.data:
+            barbearia.debit_card = request.data['debit_card'] == 'true' or request.data['debit_card'] is True
+        if 'cash' in request.data:
+            barbearia.cash = request.data['cash'] == 'true' or request.data['cash'] is True
 
         if 'imagem' in request.FILES:
             logger.info(f"Arquivo de imagem recebido: {request.FILES['imagem'].name}")
@@ -79,16 +97,11 @@ class BarbeariaViewSet(viewsets.ModelViewSet):
         else:
             logger.warning("Nenhum arquivo 'imagem' encontrado em request.FILES")
 
-        serializer = self.get_serializer(barbearia, data=data_to_serialize, partial=True)
+        serializer = self.get_serializer(barbearia, data=request.data, partial=True)
         if serializer.is_valid():
-            barbearia = serializer.save()
-            if 'nome_barbearia' in request.data:
-                novo_slug = slugify(request.data['nome_barbearia'])
-                barbearia.slug = novo_slug
-            if 'username' in request.data:
-                barbearia.username = request.data['username']
-            barbearia.save()
-            logger.info(f"Barbearia atualizada com sucesso: {serializer.data}")
+            serializer.save()
+            logger.info(f"Valores antes do save (banco): pix={Barbearia.objects.get(id=barbearia.id).pix}, credit_card={Barbearia.objects.get(id=barbearia.id).credit_card}, debit_card={Barbearia.objects.get(id=barbearia.id).debit_card}, cash={Barbearia.objects.get(id=barbearia.id).cash}")
+            logger.info(f"Valores salvos: pix={barbearia.pix}, credit_card={barbearia.credit_card}, debit_card={barbearia.debit_card}, cash={barbearia.cash}")
             return Response(serializer.data)
         logger.error(f"Erros de validação: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

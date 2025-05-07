@@ -1,4 +1,3 @@
-# users/models/agendamento.py
 from django.db import models
 from .funcionario import Funcionario
 from .servico import Servico
@@ -17,7 +16,16 @@ class Agendamento(models.Model):
     data = models.DateField()
     hora_inicio = models.TimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='CONFIRMADO')
-    preco_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Novo campo
+    preco_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    metodo_pagamento = models.CharField(
+    max_length=20,
+    choices=[
+        ('pix', 'Pix'),
+        ('cartao_credito', 'Cartão de Crédito'),
+        ('cartao_debito', 'Cartão de Débito'),
+        ('dinheiro', 'Dinheiro')
+    ]
+)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

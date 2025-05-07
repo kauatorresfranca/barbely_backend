@@ -9,7 +9,8 @@ class BarbeariaSerializer(serializers.ModelSerializer):
         model = Barbearia
         fields = [
             'id', 'nome_barbearia', 'nome_proprietario', 'email', 'username',
-            'password', 'cnpj', 'cpf', 'imagem', 'plano', 'data_criacao', 'slug', 'descricao', 'telefone'
+            'password', 'cnpj', 'cpf', 'imagem', 'plano', 'data_criacao', 'slug',
+            'descricao', 'telefone', 'pix', 'credit_card', 'debit_card', 'cash'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -36,3 +37,16 @@ class BarbeariaSerializer(serializers.ModelSerializer):
             barbearia.set_password(senha_plana)
         barbearia.save()
         return barbearia
+
+    def update(self, instance, validated_data):
+        # Atualiza os campos de pagamento diretamente
+        instance.pix = validated_data.get('pix', instance.pix)
+        instance.credit_card = validated_data.get('credit_card', instance.credit_card)
+        instance.debit_card = validated_data.get('debit_card', instance.debit_card)
+        instance.cash = validated_data.get('cash', instance.cash)
+
+        # Remove campos sensíveis antes de passar ao serializer
+        validated_data.pop('password', None)
+        validated_data.pop('imagem', None)
+
+        return super().update(instance, validated_data)

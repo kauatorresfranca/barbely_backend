@@ -19,7 +19,7 @@ from .viewsets.servico_viewset import ServicoViewSet
 from .viewsets.cliente.cliente_reset_password_viewset import PasswordResetRequestView, PasswordResetConfirmView
 from .viewsets.barbearia.barbearia_reset_password import BarbeariaPasswordResetRequestView, BarbeariaPasswordResetConfirmView
 from .viewsets.barbearia.overview_viewset import OverviewMetricsView
-from .viewsets.agendamento.agentamento_viewset import AgendamentoViewSet  # Importar o AgendamentoViewSet
+from .viewsets.agendamento.agentamento_viewset import AgendamentoViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -33,7 +33,7 @@ router.register(r'funcionarios', FuncionarioViewSet, basename='funcionario')
 router.register(r'servicos', ServicoViewSet, basename='servico')
 router.register(r'endereco-barbearia', EnderecoBarbeariaViewSet, basename='endereco-barbearia')
 router.register(r'custos', CustoViewSet, basename='custos')
-router.register(r'agendamentos', AgendamentoViewSet, basename='agendamento')  # Registrar o AgendamentoViewSet
+router.register(r'agendamentos', AgendamentoViewSet, basename='agendamento')
 
 urlpatterns = [
     path('clientes/login/', ClienteLoginView.as_view(), name='cliente-login'),

@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from users.models import Agendamento, HorarioFuncionamento
+from users.models import Agendamento, HorarioFuncionamento, Cliente, Funcionario, Servico
+from django.contrib.auth.models import User
+from django.db import transaction
 from datetime import datetime, timedelta
 from django.utils import timezone
 import logging
@@ -30,13 +32,14 @@ class AgendamentoSerializer(serializers.ModelSerializer):
     cliente_nome = serializers.SerializerMethodField()
     servico_nome = serializers.SerializerMethodField()
     servico_duracao = serializers.SerializerMethodField()
+    metodo_pagamento = serializers.CharField(allow_null=True)  # Permitir null para compatibilidade com registros existentes
 
     class Meta:
         model = Agendamento
         fields = [
             'id', 'cliente', 'cliente_nome', 'funcionario', 'servico',
             'servico_nome', 'servico_duracao', 'data', 'hora_inicio',
-            'status', 'criado_em', 'preco_total'
+            'status', 'criado_em', 'preco_total', 'metodo_pagamento'
         ]
         read_only_fields = ['id', 'cliente_nome', 'servico_nome', 'servico_duracao', 'criado_em', 'preco_total']
 
@@ -131,3 +134,78 @@ class AgendamentoSerializer(serializers.ModelSerializer):
                 )
 
         return data
+
+class CriarAgendamentoSerializer(AgendamentoSerializer):
+    cliente_email = serializers.EmailField(write_only=True)
+    cliente_nome = serializers.CharField(write_only=True, max_length=255)
+    metodo_pagamento = serializers.CharField(write_only=True)
+
+    class Meta(AgendamentoSerializer.Meta):
+        fields = AgendamentoSerializer.Meta.fields + ['cliente_email', 'cliente_nome', 'metodo_pagamento']
+        read_only_fields = AgendamentoSerializer.Meta.read_only_fields
+
+    def validate(self, data):
+        data = super().validate(data)
+        metodo_pagamento = data.get('metodo_pagamento')
+        if not metodo_pagamento:
+            raise serializers.ValidationError({
+                'metodo_pagamento': 'O método de pagamento é obrigatório.'
+            })
+        metodo_pagamento_map = {
+            'PIX': 'pix',
+            'Cartão de Crédito': 'cartao_credito',
+            'Cartão de Débito': 'cartao_debito',
+            'Dinheiro': 'dinheiro'
+        }
+        if metodo_pagamento not in metodo_pagamento_map:
+            valid_methods = list(metodo_pagamento_map.keys())
+            raise serializers.ValidationError({
+                'metodo_pagamento': f"Método de pagamento inválido. Opções válidas: {', '.join(valid_methods)}"
+            })
+        # Mapear o valor do frontend para o valor do backend
+        data['metodo_pagamento'] = metodo_pagamento_map[metodo_pagamento]
+        return data
+
+    def create(self, validated_data):
+        cliente_email = validated_data.pop('cliente_email')
+        cliente_nome = validated_data.pop('cliente_nome')
+        metodo_pagamento = validated_data.pop('metodo_pagamento')
+        barbearia = validated_data['servico'].barbearia
+
+        with transaction.atomic():
+            # Verificar se o ClienteUser existe
+            try:
+                user = User.objects.get(email=cliente_email)
+                try:
+                    cliente = Cliente.objects.get(user=user, barbearia=barbearia)
+                    # Atualizar nome do cliente, se necessário
+                    if cliente.user.nome != cliente_nome:
+                        cliente.user.nome = cliente_nome
+                        cliente.user.save()
+                except Cliente.DoesNotExist:
+                    cliente = Cliente.objects.create(
+                        user=user,
+                        barbearia=barbearia
+                    )
+            except User.DoesNotExist:
+                # Criar novo usuário
+                user = User.objects.create_user(
+                    username=cliente_email,
+                    email=cliente_email,
+                    password='default_password'  # Substituir por um fluxo de convite seguro
+                )
+                cliente = Cliente.objects.create(
+                    user=user,
+                    barbearia=barbearia,
+                    nome=cliente_nome
+                )
+
+            # Criar o agendamento
+            agendamento = Agendamento.objects.create(
+                cliente=cliente,
+                metodo_pagamento=metodo_pagamento,
+                preco_total=validated_data['servico'].preco,
+                **validated_data
+            )
+            logger.debug(f"Agendamento criado: ID {agendamento.id} para cliente {cliente_email}")
+            return agendamento
