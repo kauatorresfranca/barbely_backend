@@ -2,11 +2,14 @@ from datetime import datetime, timedelta
 from users.models import HorarioFuncionamento, Agendamento
 
 def calcular_horarios_disponiveis(barbearia, funcionario, data, duracao_servico_em_minutos):
-    dia_semana = data.weekday()  # segunda=0, domingo=6
+    # Ajustar dia_semana para corresponder ao modelo HorarioFuncionamento (0 = Domingo, 1 = Segunda, ..., 6 = Sábado)
+    dia_semana = data.weekday()  # 0 = Segunda, 1 = Terça, ..., 6 = Domingo
+    dia_semana_model = (dia_semana + 1) % 7  # Desloca para 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
 
     try:
         horario_funcionamento = HorarioFuncionamento.objects.get(
-            barbearia=barbearia, dia_semana=dia_semana
+            barbearia=barbearia,
+            dia_semana=dia_semana_model
         )
     except HorarioFuncionamento.DoesNotExist:
         print(">>> Barbearia não funciona neste dia")
@@ -30,7 +33,7 @@ def calcular_horarios_disponiveis(barbearia, funcionario, data, duracao_servico_
     agendamentos = Agendamento.objects.filter(
         funcionario=funcionario,
         data=data,
-        status='CONFIRMADO'  # Corrigido: usa status='CONFIRMADO'
+        status='CONFIRMADO'
     )
 
     horarios_ocupados = []

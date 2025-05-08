@@ -20,9 +20,9 @@ from .viewsets.cliente.cliente_reset_password_viewset import PasswordResetReques
 from .viewsets.barbearia.barbearia_reset_password import BarbeariaPasswordResetRequestView, BarbeariaPasswordResetConfirmView
 from .viewsets.barbearia.overview_viewset import OverviewMetricsView
 from .viewsets.agendamento.agentamento_viewset import AgendamentoViewSet
-from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
+from users.viewsets.token_refresh_viewset import CustomTokenRefreshView
 
 router = DefaultRouter()
 router.register(r'barbearias', BarbeariaViewSet, basename='barbearia')
@@ -37,7 +37,7 @@ router.register(r'agendamentos', AgendamentoViewSet, basename='agendamento')
 
 urlpatterns = [
     path('clientes/login/', ClienteLoginView.as_view(), name='cliente-login'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='cliente-token-refresh'),
+    path('token/refresh/', CustomTokenRefreshView.as_view(), name='cliente-token-refresh'),
     path('barbearia/agendamentos/', AgendamentosDaBarbeariaView.as_view(), name='agendamentos-da-barbearia'),
     path('barbearias/update/', BarbeariaPerfilViewSet.as_view({'put': 'update', 'get': 'retrieve'}), name='barbearia-user-info'),
     path("endereco-barbearia-publico/<slug:slug>/", EnderecoBarbeariaPublicView.as_view(), name="endereco-barbearia-publico"),

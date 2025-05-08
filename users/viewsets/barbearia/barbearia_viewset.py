@@ -33,11 +33,12 @@ class BarbeariaViewSet(viewsets.ModelViewSet):
             barbearia = Barbearia.objects.get(email=email)
             if barbearia.check_password(password):
                 refresh = RefreshToken.for_user(barbearia)
+                refresh.payload['user_type'] = 'barbearia'  # Adiciona user_type ao token
                 return Response({
                     "message": "Login realizado com sucesso!",
                     "barbearia_id": barbearia.id,
-                    "access_token": str(refresh.access_token),
-                    "refresh_token": str(refresh),
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
                 })
             else:
                 return Response({"error": "E-mail ou senha inválidos."}, status=status.HTTP_401_UNAUTHORIZED)
