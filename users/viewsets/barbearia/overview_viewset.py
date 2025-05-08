@@ -48,10 +48,10 @@ class OverviewMetricsView(APIView):
                 total=Sum('preco_total')
             ).order_by('data')
 
-            # Formatar dados para o gráfico
+            # Formatar dados para o gráfico no formato YYYY-MM-DD
             data = [
                 {
-                    'dia': item['data'].strftime('%d/%m'),
+                    'dia': item['data'].strftime('%Y-%m-%d'),
                     'valor': float(item['total'])
                 }
                 for item in faturamento_por_dia
