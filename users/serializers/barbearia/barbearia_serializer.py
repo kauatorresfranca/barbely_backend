@@ -2,7 +2,6 @@ from rest_framework import serializers
 from users.models import Barbearia
 
 class BarbeariaSerializer(serializers.ModelSerializer):
-    # Definimos 'imagem' como read_only para evitar que o serializer tente validá-lo ou atualizá-lo
     imagem = serializers.CharField(read_only=True)
 
     class Meta:
@@ -10,7 +9,8 @@ class BarbeariaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'nome_barbearia', 'nome_proprietario', 'email', 'username',
             'password', 'cnpj', 'cpf', 'imagem', 'plano', 'data_criacao', 'slug',
-            'descricao', 'telefone', 'pix', 'credit_card', 'debit_card', 'cash'
+            'descricao', 'telefone', 'pix', 'credit_card', 'debit_card', 'cash',
+            'agendamento_sem_login', 'intervalo_agendamento', 'prazo_cancelamento'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -18,7 +18,6 @@ class BarbeariaSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        # Gerando username automaticamente se não for fornecido
         if not validated_data.get('username'):
             base_username = validated_data['nome_proprietario'].lower().replace(" ", "_")
             contador = 1
@@ -30,7 +29,6 @@ class BarbeariaSerializer(serializers.ModelSerializer):
 
             validated_data['username'] = new_username
 
-        # Criando o usuário com senha criptografada
         senha_plana = validated_data.pop("password", None)
         barbearia = Barbearia(**validated_data)
         if senha_plana:
@@ -39,13 +37,14 @@ class BarbeariaSerializer(serializers.ModelSerializer):
         return barbearia
 
     def update(self, instance, validated_data):
-        # Atualiza os campos de pagamento diretamente
         instance.pix = validated_data.get('pix', instance.pix)
         instance.credit_card = validated_data.get('credit_card', instance.credit_card)
         instance.debit_card = validated_data.get('debit_card', instance.debit_card)
         instance.cash = validated_data.get('cash', instance.cash)
+        instance.agendamento_sem_login = validated_data.get('agendamento_sem_login', instance.agendamento_sem_login)
+        instance.intervalo_agendamento = validated_data.get('intervalo_agendamento', instance.intervalo_agendamento)
+        instance.prazo_cancelamento = validated_data.get('prazo_cancelamento', instance.prazo_cancelamento)
 
-        # Remove campos sensíveis antes de passar ao serializer
         validated_data.pop('password', None)
         validated_data.pop('imagem', None)
 

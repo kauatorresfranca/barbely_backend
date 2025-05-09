@@ -37,6 +37,9 @@ class Barbearia(AbstractUser):
     credit_card = models.BooleanField(default=True)
     debit_card = models.BooleanField(default=True)
     cash = models.BooleanField(default=True)
+    agendamento_sem_login = models.BooleanField(default=False)
+    intervalo_agendamento = models.PositiveIntegerField(default=30)
+    prazo_cancelamento = models.PositiveIntegerField(default=30)
 
     groups = models.ManyToManyField(
         'auth.Group',

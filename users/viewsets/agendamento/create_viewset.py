@@ -6,7 +6,7 @@ from users.authentication import BarbeariaJWTAuthentication
 from users.models.cliente.cliente_user import ClienteUser
 from users.models import Agendamento, Cliente, Servico
 from users.models.funcionario import Funcionario
-from users.serializers import AgendamentoSerializer
+from users.serializers.agendamento_serializer import CriarAgendamentoSerializer  # Usando o serializer específico
 from django.contrib.auth import get_user_model
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -24,21 +24,12 @@ def generate_random_password(length=16):
     return ''.join(secrets.choice(characters) for _ in range(length))
 
 class CriarAgendamentoView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []  # Controle manual de autenticação
 
     def post(self, request):
         logger.debug(f"Usuário autenticado: {request.user}, Autenticado: {request.user.is_authenticated}")
 
-        if not request.user.is_authenticated:
-            logger.error("Usuário não autenticado.")
-            return Response(
-                {"detail": "Autenticação necessária. Token inválido ou expirado."},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-        cliente_user = request.user
-        logger.debug(f"Usuário: {cliente_user}, Tipo: {type(cliente_user)}")
-
+        # Obter o serviço para verificar a configuração da barbearia
         servico_id = request.data.get('servico')
         try:
             servico = Servico.objects.get(id=servico_id)
@@ -50,21 +41,19 @@ class CriarAgendamentoView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        try:
-            cliente = Cliente.objects.get(user=cliente_user, barbearia=servico.barbearia)
-            logger.debug(f"Cliente encontrado: {cliente}, Nome: {cliente.user.nome}")
-        except Cliente.DoesNotExist:
-            logger.info(f"Cliente não registrado para barbearia {servico.barbearia}. Criando associação.")
-            cliente = Cliente.objects.create(
-                user=cliente_user,
-                barbearia=servico.barbearia
+        barbearia = servico.barbearia
+        is_agendamento_sem_login = barbearia.agendamento_sem_login
+
+        # Se não for agendamento sem login, exigir autenticação
+        if not is_agendamento_sem_login and not request.user.is_authenticated:
+            logger.error("Usuário não autenticado.")
+            return Response(
+                {"detail": "Autenticação necessária. Token inválido ou expirado."},
+                status=status.HTTP_401_UNAUTHORIZED
             )
-            logger.debug(f"Cliente criado: {cliente}")
 
-        data = request.data.copy()
-        data['cliente'] = cliente.id
-
-        serializer = AgendamentoSerializer(data=data, context={'request': request})
+        # Usar o serializer para validar os dados
+        serializer = CriarAgendamentoSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             logger.info(f"Agendamento criado: {serializer.data['id']}")
@@ -129,7 +118,7 @@ class BarbeariaCriarAgendamentoView(APIView):
                     email=cliente_email,
                     nome=cliente_nome,
                     password=generate_random_password(),
-                    telefone=telefone or None  # Use telefone if provided, else None
+                    telefone=telefone or None
                 )
                 cliente = Cliente.objects.create(
                     user=cliente_user,
@@ -152,7 +141,7 @@ class BarbeariaCriarAgendamentoView(APIView):
 
         data['cliente'] = cliente.id
 
-        serializer = AgendamentoSerializer(data=data, context={'request': request})
+        serializer = CriarAgendamentoSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             logger.info(f"Agendamento criado: {serializer.data['id']}")
