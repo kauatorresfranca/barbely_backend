@@ -17,7 +17,6 @@ class IsBarbeariaOwner(BasePermission):
             logger.warning("Usuário não autenticado tentou acessar HorarioFuncionamento.")
             return False
         
-        # Logar informações detalhadas para depuração
         logger.info(f"Tipo de usuário autenticado: {request.user.__class__.__name__}")
         logger.info(f"ID do usuário autenticado: {getattr(request.user, 'id', 'N/A')}")
         logger.info(f"Slug do usuário autenticado: {getattr(request.user, 'slug', 'N/A')}")
@@ -26,7 +25,6 @@ class IsBarbeariaOwner(BasePermission):
         logger.info(f"Representação do usuário: {repr(request.user)}")
         logger.info(f"Representação da barbearia do horário: {repr(obj.barbearia)}")
         
-        # Comparar IDs para evitar problemas com instâncias
         is_owner = str(obj.barbearia.id) == str(getattr(request.user, 'id', ''))
         if not is_owner:
             logger.warning(
@@ -43,31 +41,27 @@ class HorarioFuncionamentoViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
-            return [AllowAny()]  # Público para listagem e detalhe
+            return [AllowAny()]
         return [IsAuthenticated(), IsBarbeariaOwner()]
 
     def get_queryset(self):
         user = self.request.user
         slug = self.request.query_params.get('slug')
 
-        # Requisições autenticadas: filtra pelo usuário logado
         if user and user.is_authenticated:
             logger.info(f"Filtrando horários para a barbearia autenticada: {getattr(user, 'slug', 'N/A')}")
             return HorarioFuncionamento.objects.filter(barbearia=user).order_by('dia_semana')
 
-        # Requisições públicas com slug: filtra pela barbearia informada
         if slug:
             logger.info(f"Buscando horários para barbearia com slug {slug}")
             return HorarioFuncionamento.objects.filter(barbearia__slug=slug).order_by('dia_semana')
 
-        # Nenhuma condição válida: retorna queryset vazio
         logger.warning("Nenhum slug ou usuário autenticado fornecido para listar horários.")
         return HorarioFuncionamento.objects.none()
 
     def get_object(self):
         pk = self.kwargs.get('pk')
         try:
-            # Buscar o objeto usando o queryset filtrado
             queryset = self.get_queryset()
             obj = queryset.get(pk=pk)
             return obj
@@ -93,24 +87,20 @@ class HorarioFuncionamentoViewSet(viewsets.ModelViewSet):
                     logger.error("Dados inválidos: 'dia_semana' é obrigatório.")
                     return Response({"error": "'dia_semana' é obrigatório para cada horário."}, status=status.HTTP_400_BAD_REQUEST)
 
-                # Verificar se já existe um horário para o dia
                 existing_horario = HorarioFuncionamento.objects.filter(
                     barbearia=user, dia_semana=dia_semana
                 ).first()
 
-                # Adicionar a barbearia ao item para o serializer
                 item_data = {**item, 'barbearia': user.id}
                 item_serializer = self.get_serializer(data=item_data)
                 item_serializer.is_valid(raise_exception=True)
 
                 if existing_horario:
-                    # Atualizar o registro existente
                     for attr, value in item_serializer.validated_data.items():
                         setattr(existing_horario, attr, value)
                     existing_horario.save()
                     instances.append(existing_horario)
                 else:
-                    # Criar um novo registro
                     instance = HorarioFuncionamento(barbearia=user, **item_serializer.validated_data)
                     instance.save()
                     instances.append(instance)
@@ -127,7 +117,7 @@ class HorarioFuncionamentoViewSet(viewsets.ModelViewSet):
         logger.info(f"Dados recebidos no PATCH: {request.data}")
         instance = self.get_object()
         if isinstance(instance, Response):
-            return instance  # Retorna erro de permissão ou autenticação
+            return instance
 
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         try:

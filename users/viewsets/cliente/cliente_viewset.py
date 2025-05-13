@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import ValidationError
+from users.authentication import BarbeariaJWTAuthentication, ClienteJWTAuthentication
 from users.models import Cliente
 from users.models.barbearia.barbearia_user import BarbeariaUser
 from users.models.cliente.cliente_user import ClienteUser
@@ -13,6 +14,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 class ClienteViewSet(viewsets.ModelViewSet):
     serializer_class = ClienteSerializer
+    authentication_classes = [BarbeariaJWTAuthentication, ClienteJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):

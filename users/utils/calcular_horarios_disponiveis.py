@@ -47,13 +47,11 @@ def calcular_horarios_disponiveis(barbearia, funcionario, data, duracao_servico_
     atual = inicio
     contador = 0
     while atual + duracao <= fim:
-        # Segurança contra loop infinito
         contador += 1
         if contador > 100:
             print("Loop de geração de horários interrompido por segurança.")
             break
 
-        # Verifica se há conflito com agendamentos
         conflito = any(
             (atual < fim_ocupado and atual + duracao > inicio_ocupado)
             for inicio_ocupado, fim_ocupado in horarios_ocupados
