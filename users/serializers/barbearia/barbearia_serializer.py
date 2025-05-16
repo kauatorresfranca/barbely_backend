@@ -10,7 +10,7 @@ class BarbeariaSerializer(serializers.ModelSerializer):
             'id', 'nome_barbearia', 'nome_proprietario', 'email', 'username',
             'password', 'cnpj', 'cpf', 'imagem', 'plano', 'data_criacao', 'slug',
             'descricao', 'telefone', 'pix', 'credit_card', 'debit_card', 'cash',
-            'agendamento_sem_login', 'intervalo_agendamento', 'prazo_cancelamento'
+            'intervalo_agendamento', 'prazo_cancelamento'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -41,7 +41,6 @@ class BarbeariaSerializer(serializers.ModelSerializer):
         instance.credit_card = validated_data.get('credit_card', instance.credit_card)
         instance.debit_card = validated_data.get('debit_card', instance.debit_card)
         instance.cash = validated_data.get('cash', instance.cash)
-        instance.agendamento_sem_login = validated_data.get('agendamento_sem_login', instance.agendamento_sem_login)
         instance.intervalo_agendamento = validated_data.get('intervalo_agendamento', instance.intervalo_agendamento)
         instance.prazo_cancelamento = validated_data.get('prazo_cancelamento', instance.prazo_cancelamento)
 
