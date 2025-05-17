@@ -14,7 +14,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 class ClienteViewSet(viewsets.ModelViewSet):
     serializer_class = ClienteSerializer
-    authentication_classes = [BarbeariaJWTAuthentication, ClienteJWTAuthentication]
+    authentication_classes = [ClienteJWTAuthentication, BarbeariaJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):

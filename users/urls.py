@@ -1,5 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from django.conf import settings
+from django.conf.urls.static import static
 
 from .viewsets.barbearia.custo_viewset import CustoViewSet
 from .viewsets.agendamento.agendamento_da_barbearia_viewset import AgendamentosDaBarbeariaView
@@ -20,8 +22,6 @@ from .viewsets.cliente.cliente_reset_password_viewset import PasswordResetReques
 from .viewsets.barbearia.barbearia_reset_password import BarbeariaPasswordResetRequestView, BarbeariaPasswordResetConfirmView
 from .viewsets.barbearia.overview_viewset import OverviewMetricsView
 from .viewsets.agendamento.agentamento_viewset import AgendamentoViewSet
-from django.conf import settings
-from django.conf.urls.static import static
 from users.viewsets.token_refresh_viewset import CustomTokenRefreshView
 
 router = DefaultRouter()
@@ -43,7 +43,7 @@ urlpatterns = [
     path("endereco-barbearia-publico/<slug:slug>/", EnderecoBarbeariaPublicView.as_view(), name="endereco-barbearia-publico"),
     path('clientes/user-info/', ClienteUserInfoView.as_view(), name='cliente-user-info'),
     path('clientes/barbearia/<int:barbearia_id>/', ClientesDaBarbeariaView.as_view(), name='clientes-da-barbearia'),
-    path('clientes/<int:cliente_id>/', ClienteDetailView.as_view(), name='cliente-detail'),
+    path('barbearia/clientes/<int:cliente_id>/', ClienteDetailView.as_view(), name='barbearia-cliente-detail'),  # Nova URL para barbearias
     path('clientes/agendamentos/', ClienteAgendamentosView.as_view(), name='cliente-agendamentos'),
     path('barbearia/agendamentos/criar/', BarbeariaCriarAgendamentoView.as_view(), name='barbearia-criar-agendamento'),
     path('agendamentos/criar/', CriarAgendamentoView.as_view(), name='criar-agendamento'),
@@ -53,7 +53,7 @@ urlpatterns = [
     path('clientes/password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('barbearias/password/reset/', BarbeariaPasswordResetRequestView.as_view(), name='barbearia-password-reset-request'),
     path('barbearias/password/reset/confirm/', BarbeariaPasswordResetConfirmView.as_view(), name='barbearia-password-reset-confirm'),
-    path('barbearias/overview/', OverviewMetricsView.as_view(), name='overview-metrics'),
+    path('barbearias-overview/', OverviewMetricsView.as_view(), name='overview-metrics'),
     path('', include(router.urls)),
 ]
 
