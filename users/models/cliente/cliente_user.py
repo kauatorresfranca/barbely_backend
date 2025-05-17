@@ -20,7 +20,7 @@ class ClienteUserManager(BaseUserManager):
 class ClienteUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     nome = models.CharField(max_length=100)
-    telefone = models.CharField(max_length=15, null=True, blank=True)  # Removed unique=True
+    telefone = models.CharField(max_length=15, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

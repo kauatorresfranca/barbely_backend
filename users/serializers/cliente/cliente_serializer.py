@@ -43,10 +43,11 @@ class ClienteUserSerializer(serializers.ModelSerializer):
 
 class ClienteSerializer(serializers.ModelSerializer):
     user = ClienteUserSerializer(partial=True)
+    status = serializers.ChoiceField(choices=Cliente.STATUS_CHOICES, default='ativo')
 
     class Meta:
         model = Cliente
-        fields = ['id', 'user', 'barbearia', 'imagem']
+        fields = ['id', 'user', 'barbearia', 'imagem', 'status']
         extra_kwargs = {
             'barbearia': {'required': True},
             'imagem': {'required': False},
@@ -85,9 +86,14 @@ class ClienteSerializer(serializers.ModelSerializer):
             if user_serializer.is_valid(raise_exception=True):
                 user_serializer.save()
 
+        status = validated_data.get('status')
+        if status:
+            instance.status = status
+
         for attr, value in validated_data.items():
-            logger.debug(f"Setting {attr} = {value}")
-            setattr(instance, attr, value)
+            if attr != 'user':  # Evitar sobrescrever 'user' diretamente
+                logger.debug(f"Setting {attr} = {value}")
+                setattr(instance, attr, value)
         instance.save()
         logger.debug(f"Updated instance: {instance.__dict__}")
         return instance
@@ -117,6 +123,13 @@ class ClienteLoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError("Conta inativa.")
 
+        try:
+            cliente = Cliente.objects.get(user=user)
+            if cliente.status == 'inativo':
+                raise serializers.ValidationError("Cliente está inativo na barbearia.")
+        except Cliente.DoesNotExist:
+            raise serializers.ValidationError("Cliente não associado a uma barbearia.")
+
         refresh = RefreshToken.for_user(user)
         return {
             "refresh": str(refresh),
@@ -126,6 +139,7 @@ class ClienteLoginSerializer(serializers.Serializer):
                 "email": user.email,
                 "nome": user.nome,
                 "telefone": user.telefone,
-                "date_joined": user.date_joined
+                "date_joined": user.date_joined,
+                "status": cliente.status
             }
         }

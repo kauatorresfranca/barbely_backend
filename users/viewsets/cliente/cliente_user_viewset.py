@@ -1,11 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import action  # Import the action decorator
 from ...models import ClienteUser, Cliente
 from ...serializers import ClienteSerializer
-from rest_framework.generics import RetrieveAPIView
 from users.authentication import ClienteJWTAuthentication
 
 class ClienteLoginView(APIView):
@@ -21,11 +21,12 @@ class ClienteLoginView(APIView):
                 try:
                     cliente = Cliente.objects.get(user=user)
                     refresh = RefreshToken.for_user(user)
-                    refresh.payload['user_type'] = 'cliente'  # Adiciona user_type ao token
+                    refresh.payload['user_type'] = 'cliente'
                     return Response({
                         'refresh': str(refresh),
                         'access': str(refresh.access_token),
-                        'cliente_id': cliente.id  # ← usado no front
+                        'cliente_id': cliente.id,
+                        'status': cliente.status
                     })
                 except Cliente.DoesNotExist:
                     return Response({'detail': 'Cliente não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
@@ -46,7 +47,21 @@ class ClienteUserInfoView(APIView):
         except Cliente.DoesNotExist:
             return Response({"error": "Cliente não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-class ClienteDetailView(RetrieveAPIView):
+class ClienteDetailView(viewsets.ModelViewSet):  # Changed to ModelViewSet
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
     permission_classes = [AllowAny]
+
+    @action(detail=True, methods=['patch'], url_path='update-status')
+    def update_status(self, request, pk=None):
+        cliente = self.get_object()
+        new_status = request.data.get('status')
+        if new_status not in [choice[0] for choice in Cliente.STATUS_CHOICES]:
+            return Response(
+                {"detail": "Status inválido. Use 'ativo' ou 'inativo'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        cliente.status = new_status
+        cliente.save()
+        serializer = self.get_serializer(cliente)
+        return Response(serializer.data)
