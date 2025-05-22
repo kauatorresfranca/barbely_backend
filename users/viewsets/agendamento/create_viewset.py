@@ -6,7 +6,7 @@ from users.authentication import BarbeariaJWTAuthentication
 from users.models.cliente.cliente_user import ClienteUser
 from users.models import Agendamento, Cliente, Servico
 from users.models.funcionario import Funcionario
-from users.serializers.agendamento_serializer import CriarAgendamentoSerializer  # Usando o serializer específico
+from users.serializers.agendamento_serializer import CriarAgendamentoSerializer
 from django.contrib.auth import get_user_model
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -24,12 +24,12 @@ def generate_random_password(length=16):
     return ''.join(secrets.choice(characters) for _ in range(length))
 
 class CriarAgendamentoView(APIView):
-    permission_classes = []  # Controle manual de autenticação
+    permission_classes = []  # Allow unauthenticated access
 
     def post(self, request):
         logger.debug(f"Usuário autenticado: {request.user}, Autenticado: {request.user.is_authenticated}")
 
-        # Obter o serviço para verificar a configuração da barbearia
+        # Obter o serviço
         servico_id = request.data.get('servico')
         try:
             servico = Servico.objects.get(id=servico_id)
@@ -39,17 +39,6 @@ class CriarAgendamentoView(APIView):
             return Response(
                 {"detail": "Serviço não encontrado."},
                 status=status.HTTP_404_NOT_FOUND
-            )
-
-        barbearia = servico.barbearia
-        is_agendamento_sem_login = barbearia.agendamento_sem_login
-
-        # Se não for agendamento sem login, exigir autenticação
-        if not is_agendamento_sem_login and not request.user.is_authenticated:
-            logger.error("Usuário não autenticado.")
-            return Response(
-                {"detail": "Autenticação necessária. Token inválido ou expirado."},
-                status=status.HTTP_401_UNAUTHORIZED
             )
 
         # Usar o serializer para validar os dados

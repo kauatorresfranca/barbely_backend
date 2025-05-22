@@ -24,7 +24,10 @@ class FuncionarioViewSet(viewsets.ModelViewSet):
         if barbearia_slug:
             return Funcionario.objects.filter(barbearia__slug=barbearia_slug)
 
-        return Funcionario.objects.none()  # evita listar tudo quando não tem filtro
+        return Funcionario.objects.none()  # Avoid listing all when no filter is provided
 
     def perform_create(self, serializer):
+        serializer.save(barbearia=self.request.user)
+
+    def perform_update(self, serializer):
         serializer.save(barbearia=self.request.user)
