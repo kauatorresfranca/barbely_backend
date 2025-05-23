@@ -2,29 +2,22 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from users.authentication import BarbeariaJWTAuthentication
+from users.authentication import BarbeariaJWTAuthentication, ClienteJWTAuthentication
 from users.models.cliente.cliente_user import ClienteUser
 from users.models import Agendamento, Cliente, Servico
 from users.models.funcionario import Funcionario
 from users.serializers.agendamento_serializer import CriarAgendamentoSerializer
-from django.contrib.auth import get_user_model
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-import secrets
-import string
+from users.utils.utils import generate_random_password
 import logging
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
-def generate_random_password(length=16):
-    """Generate a secure random password."""
-    characters = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(secrets.choice(characters) for _ in range(length))
-
 class CriarAgendamentoView(APIView):
-    permission_classes = []  # Allow unauthenticated access
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [ClienteJWTAuthentication]
 
     def post(self, request):
         logger.debug(f"Usuário autenticado: {request.user}, Autenticado: {request.user.is_authenticated}")
@@ -41,8 +34,26 @@ class CriarAgendamentoView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        # Associar o cliente autenticado
+        try:
+            cliente_user = request.user
+            cliente = Cliente.objects.get(user=cliente_user, barbearia=servico.barbearia)
+            logger.debug(f"Cliente encontrado: {cliente}")
+        except Cliente.DoesNotExist:
+            logger.error(f"Cliente não associado à barbearia: {servico.barbearia}")
+            return Response(
+                {"detail": "Cliente não associado a esta barbearia."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Adicionar cliente ao payload
+        data = request.data.copy()
+        data['cliente'] = cliente.id  # Incluir o ID do cliente diretamente
+        data['cliente_email'] = cliente_user.email
+        data['cliente_nome'] = cliente_user.nome or "Cliente sem nome"
+
         # Usar o serializer para validar os dados
-        serializer = CriarAgendamentoSerializer(data=request.data, context={'request': request})
+        serializer = CriarAgendamentoSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             logger.info(f"Agendamento criado: {serializer.data['id']}")
@@ -62,7 +73,7 @@ class BarbeariaCriarAgendamentoView(APIView):
         data = request.data.copy()
         cliente_email = data.get('cliente_email')
         cliente_nome = data.get('cliente_nome')
-        telefone = data.get('telefone')  # Optional telefone
+        telefone = data.get('telefone')  # Optional
         servico_id = data.get('servico')
 
         if not cliente_email:
@@ -80,10 +91,10 @@ class BarbeariaCriarAgendamentoView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if not cliente_nome:
-            logger.error("Nome do cliente não fornecido.")
+        if not cliente_nome or cliente_nome.strip() == "":
+            logger.error("Nome do cliente não fornecido ou vazio.")
             return Response(
-                {"detail": "O nome do cliente é obrigatório."},
+                {"detail": "O nome do cliente é obrigatório e não pode ser vazio."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -100,6 +111,9 @@ class BarbeariaCriarAgendamentoView(APIView):
         try:
             cliente_user = ClienteUser.objects.get(email=cliente_email)
             cliente = Cliente.objects.get(user=cliente_user, barbearia=barbearia)
+            if cliente_nome and cliente.user.nome != cliente_nome:
+                cliente.user.nome = cliente_nome
+                cliente.user.save()
             logger.debug(f"Cliente encontrado: {cliente}")
         except ClienteUser.DoesNotExist:
             try:

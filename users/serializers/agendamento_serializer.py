@@ -5,15 +5,9 @@ from django.db import transaction
 from datetime import datetime, timedelta
 from django.utils import timezone
 import logging
-import secrets
-import string
+from users.utils.utils import generate_random_password
 
 logger = logging.getLogger(__name__)
-
-def generate_random_password(length=16):
-    """Generate a secure random password."""
-    characters = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(secrets.choice(characters) for _ in range(length))
 
 class HorarioFuncionamentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +35,7 @@ class AgendamentoSerializer(serializers.ModelSerializer):
     servico_duracao = serializers.SerializerMethodField()
     metodo_pagamento = serializers.CharField(allow_null=True)
     hora_inicio = serializers.TimeField(required=True)
+    cliente = serializers.PrimaryKeyRelatedField(queryset=Cliente.objects.all(), write_only=True)
 
     class Meta:
         model = Agendamento
@@ -49,7 +44,7 @@ class AgendamentoSerializer(serializers.ModelSerializer):
             'servico_nome', 'servico_duracao', 'data', 'hora_inicio',
             'status', 'criado_em', 'preco_total', 'metodo_pagamento'
         ]
-        read_only_fields = ['id', 'cliente', 'cliente_nome', 'servico_nome', 'servico_duracao', 'criado_em', 'preco_total']
+        read_only_fields = ['id', 'cliente_nome', 'servico_nome', 'servico_duracao', 'criado_em', 'preco_total']
 
     def get_cliente_nome(self, obj):
         try:
@@ -79,7 +74,7 @@ class AgendamentoSerializer(serializers.ModelSerializer):
         if self.context['request'].method == 'PATCH' and 'status' in data:
             return data
 
-        required_fields = ['funcionario', 'servico', 'data', 'hora_inicio']
+        required_fields = ['funcionario', 'servico', 'data', 'hora_inicio', 'cliente']
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             raise serializers.ValidationError(
@@ -151,7 +146,6 @@ class CriarAgendamentoSerializer(AgendamentoSerializer):
 
     class Meta(AgendamentoSerializer.Meta):
         fields = AgendamentoSerializer.Meta.fields + ['cliente_email', 'cliente_nome', 'metodo_pagamento']
-        read_only_fields = AgendamentoSerializer.Meta.read_only_fields
 
     def validate(self, data):
         data = super().validate(data)
@@ -175,54 +169,36 @@ class CriarAgendamentoSerializer(AgendamentoSerializer):
         return data
 
     def create(self, validated_data):
-        cliente_email = validated_data.pop('cliente_email', '')
-        cliente_nome = validated_data.pop('cliente_nome', '')
+        cliente_email = validated_data.pop('cliente_email', None)
+        cliente_nome = validated_data.pop('cliente_nome', None)
         metodo_pagamento = validated_data.pop('metodo_pagamento')
         barbearia = validated_data['servico'].barbearia
         hora_inicio = validated_data.pop('hora_inicio')
 
         with transaction.atomic():
-            if cliente_email or cliente_nome:
-                try:
-                    cliente_user = ClienteUser.objects.get(email=cliente_email) if cliente_email else None
-                    if cliente_user:
-                        try:
-                            cliente = Cliente.objects.get(user=cliente_user, barbearia=barbearia)
-                            if cliente_nome and cliente.user.nome != cliente_nome:
-                                cliente.user.nome = cliente_nome
-                                cliente.user.save()
-                        except Cliente.DoesNotExist:
-                            cliente = Cliente.objects.create(
-                                user=cliente_user,
-                                barbearia=barbearia
-                            )
-                    else:
-                        cliente_user = ClienteUser.objects.create_user(
-                            email=cliente_email or f"temp_{secrets.token_hex(8)}@example.com",
-                            nome=cliente_nome or "Cliente Anônimo",
-                            password=generate_random_password()
-                        )
-                        cliente = Cliente.objects.create(
-                            user=cliente_user,
-                            barbearia=barbearia
-                        )
-                except ClienteUser.DoesNotExist:
-                    cliente_user = ClienteUser.objects.create_user(
-                        email=cliente_email or f"temp_{secrets.token_hex(8)}@example.com",
-                        nome=cliente_nome or "Cliente Anônimo",
-                        password=generate_random_password()
-                    )
-                    cliente = Cliente.objects.create(
-                        user=cliente_user,
-                        barbearia=barbearia
-                    )
-            else:
-                # Create a temporary ClienteUser instead of using email_temporario
+            try:
+                if 'cliente' not in validated_data:
+                    cliente_user = self.context['request'].user
+                    cliente = Cliente.objects.get(user=cliente_user, barbearia=barbearia)
+                else:
+                    cliente = validated_data['cliente']
+                
+                if cliente_email and cliente_nome:
+                    cliente_user = ClienteUser.objects.get(email=cliente_email)
+                    if cliente_nome and cliente.user.nome != cliente_nome:
+                        cliente.user.nome = cliente_nome
+                        cliente.user.save()
+            except ClienteUser.DoesNotExist:
                 cliente_user = ClienteUser.objects.create_user(
-                    email=f"temp_{secrets.token_hex(8)}@example.com",
-                    nome="Cliente Anônimo",
+                    email=cliente_email or f"temp_{generate_random_password(8)}@example.com",
+                    nome=cliente_nome or "Cliente sem nome",
                     password=generate_random_password()
                 )
+                cliente = Cliente.objects.create(
+                    user=cliente_user,
+                    barbearia=barbearia
+                )
+            except Cliente.DoesNotExist:
                 cliente = Cliente.objects.create(
                     user=cliente_user,
                     barbearia=barbearia
@@ -236,5 +212,5 @@ class CriarAgendamentoSerializer(AgendamentoSerializer):
                 preco_total=validated_data['servico'].preco,
                 **validated_data
             )
-            logger.debug(f"Agendamento criado: ID {agendamento.id} para cliente {cliente_email or 'sem e-mail'}")
+            logger.debug(f"Agendamento criado: ID {agendamento.id} para cliente {cliente_email or cliente_user.email}")
             return agendamento
