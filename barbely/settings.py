@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "django_filters",
     "cloudinary",
     "cloudinary_storage",
+    "subscriptions",  # Adicionando a nova app
 ]
 
 MIDDLEWARE = [
@@ -273,6 +274,10 @@ LOGGING = {
     },
 }
 
+# settings.py
+STRIPE_SECRET_KEY = "sk_test_51RSRkFIOZGJoeO456nDM4oQg1BxJ8HdlpOMy0dK5Vb6Dt0S0SaMDe2YZPWK4lkGKau1m0DdfmWRn4K71l2BzB0HR00XP9H7ud6"
+STRIPE_PUBLISHABLE_KEY = "pk_test_51RSRkFIOZGJoeO45adKRWF1qbDwH7HdYsLEgPjgvatkyA57dLKvuwRV7kf3syWLJOR6KEhIRsemcuUmqzz6whxkV00w5W1uw86"
+STRIPE_WEBHOOK_SECRET = "whsec_wRNftLajMZNeslQOP6vEPm4iVx5NlZ6z"  # Use o valor confirmado
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
