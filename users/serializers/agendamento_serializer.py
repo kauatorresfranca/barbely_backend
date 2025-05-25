@@ -31,6 +31,7 @@ class HorarioFuncionamentoSerializer(serializers.ModelSerializer):
 
 class AgendamentoSerializer(serializers.ModelSerializer):
     cliente_nome = serializers.SerializerMethodField()
+    funcionario_nome = serializers.SerializerMethodField()  # Adicionado
     servico_nome = serializers.SerializerMethodField()
     servico_duracao = serializers.SerializerMethodField()
     metodo_pagamento = serializers.CharField(allow_null=True)
@@ -40,11 +41,11 @@ class AgendamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agendamento
         fields = [
-            'id', 'cliente', 'cliente_nome', 'funcionario', 'servico',
+            'id', 'cliente', 'cliente_nome', 'funcionario', 'funcionario_nome', 'servico',
             'servico_nome', 'servico_duracao', 'data', 'hora_inicio',
             'status', 'criado_em', 'preco_total', 'metodo_pagamento'
         ]
-        read_only_fields = ['id', 'cliente_nome', 'servico_nome', 'servico_duracao', 'criado_em', 'preco_total']
+        read_only_fields = ['id', 'cliente_nome', 'funcionario_nome', 'servico_nome', 'servico_duracao', 'criado_em', 'preco_total']
 
     def get_cliente_nome(self, obj):
         try:
@@ -53,6 +54,14 @@ class AgendamentoSerializer(serializers.ModelSerializer):
             return "Cliente não disponível"
         except Exception as e:
             return f"Erro ao acessar nome do cliente: {str(e)}"
+
+    def get_funcionario_nome(self, obj):
+        try:
+            if obj.funcionario:
+                return obj.funcionario.nome or "Funcionário não disponível"
+            return "Sem preferência"
+        except Exception as e:
+            return f"Erro ao acessar nome do funcionário: {str(e)}"
 
     def get_servico_nome(self, obj):
         try:

@@ -1,8 +1,9 @@
+# users/models/cliente/cliente.py
 from django.db import models
 from users.models.barbearia.barbearia import Barbearia
 from users.models.cliente.cliente_user import ClienteUser
-from datetime import timedelta
 from django.utils import timezone
+from datetime import timedelta
 
 class Cliente(models.Model):
     STATUS_CHOICES = (
@@ -25,11 +26,12 @@ class Cliente(models.Model):
         Atualiza o status do cliente com base na atividade recente.
         Regra: Inativo se não houver agendamentos nos últimos 6 meses.
         """
-        from users.models import Agendamento  # Importação local para evitar circularidade
+        from users.models.agendamento import Agendamento  # Importação local para evitar circularidade
         six_months_ago = timezone.now() - timedelta(days=180)
         recent_agendamentos = Agendamento.objects.filter(
             cliente=self,
-            data_horario__gte=six_months_ago
+            data__gte=six_months_ago,  # Usando 'data' em vez de 'data_horario'
+            status__in=['CONFIRMADO', 'CONCLUIDO']
         ).exists()
         if not recent_agendamentos:
             self.status = 'inativo'

@@ -1,7 +1,12 @@
+# users/serializers/cliente_serializer.py
 from rest_framework import serializers
-from users.models import Cliente, ClienteUser
+from users.models import Cliente, ClienteUser, Agendamento
+from users.serializers.agendamento_serializer import AgendamentoSerializer
 import logging
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.db.models import Sum, Count  # Adicione estas importações
 
 logger = logging.getLogger(__name__)
 
@@ -44,14 +49,70 @@ class ClienteUserSerializer(serializers.ModelSerializer):
 class ClienteSerializer(serializers.ModelSerializer):
     user = ClienteUserSerializer(partial=True)
     status = serializers.ChoiceField(choices=Cliente.STATUS_CHOICES, default='ativo')
+    historico = serializers.SerializerMethodField()
+    estatisticas = serializers.SerializerMethodField()
+    saldo = serializers.SerializerMethodField()
 
     class Meta:
         model = Cliente
-        fields = ['id', 'user', 'barbearia', 'imagem', 'status']
+        fields = ['id', 'user', 'barbearia', 'imagem', 'status', 'historico', 'estatisticas', 'saldo']
         extra_kwargs = {
             'barbearia': {'required': True},
             'imagem': {'required': False},
         }
+
+    def get_historico(self, obj):
+        agendamentos = Agendamento.objects.filter(cliente=obj, status__in=['CONFIRMADO', 'CONCLUIDO']).order_by('-data', '-hora_inicio')[:5]
+        return AgendamentoSerializer(agendamentos, many=True).data
+
+    def get_estatisticas(self, obj):
+        hoje = timezone.now().date()
+        inicio_mes = hoje.replace(day=1)
+        
+        # Agendamentos este mês
+        agendamentos_mes = Agendamento.objects.filter(
+            cliente=obj,
+            data__gte=inicio_mes,
+            status__in=['CONFIRMADO', 'CONCLUIDO']
+        ).count()
+
+        # Total de agendamentos
+        total_agendamentos = Agendamento.objects.filter(
+            cliente=obj,
+            status__in=['CONFIRMADO', 'CONCLUIDO']
+        ).count()
+
+        # Gasto total
+        gasto_total = Agendamento.objects.filter(
+            cliente=obj,
+            status__in=['CONFIRMADO', 'CONCLUIDO']
+        ).aggregate(total=Sum('preco_total'))['total'] or 0  # Use Sum diretamente
+
+        # Último agendamento
+        ultimo_agendamento = Agendamento.objects.filter(
+            cliente=obj,
+            status__in=['CONFIRMADO', 'CONCLUIDO']
+        ).order_by('-data', '-hora_inicio').first()
+        ultimo_agendamento_data = ultimo_agendamento.data.strftime('%d/%m/%Y') if ultimo_agendamento else 'Nenhum'
+
+        # Serviço mais frequente
+        servico_mais_frequente = Agendamento.objects.filter(
+            cliente=obj,
+            status__in=['CONFIRMADO', 'CONCLUIDO']
+        ).values('servico__nome').annotate(count=Count('servico')).order_by('-count').first()  # Use Count diretamente
+        servico_mais_frequente_nome = servico_mais_frequente['servico__nome'] if servico_mais_frequente else 'Nenhum'
+
+        return {
+            'agendamentos_este_mes': agendamentos_mes,
+            'total_agendamentos': total_agendamentos,
+            'gasto_total': f"R$ {gasto_total:.2f}",
+            'ultimo_agendamento': ultimo_agendamento_data,
+            'servico_mais_frequente': servico_mais_frequente_nome,
+        }
+
+    def get_saldo(self, obj):
+        # Placeholder para saldo (você pode implementar uma lógica real aqui)
+        return "R$ 0,00"
 
     def validate_imagem(self, value):
         logger.debug(f"Validating imagem: {value}")
@@ -91,7 +152,7 @@ class ClienteSerializer(serializers.ModelSerializer):
             instance.status = status
 
         for attr, value in validated_data.items():
-            if attr != 'user':  # Evitar sobrescrever 'user' diretamente
+            if attr != 'user':
                 logger.debug(f"Setting {attr} = {value}")
                 setattr(instance, attr, value)
         instance.save()
