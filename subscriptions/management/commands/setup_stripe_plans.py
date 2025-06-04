@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
 import stripe
-from django.conf import settings
+from env import STRIPE_SECRET_KEY
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key = STRIPE_SECRET_KEY
 
 class Command(BaseCommand):
     help = 'Configura os planos no Stripe'
