@@ -35,6 +35,7 @@ def create_checkout_session(request):
     price_id = data.get('price_id')
     plan_name = data.get('plan_name')
     billing_cycle = data.get('billing_cycle')
+    is_trial = data.get('is_trial', False)  # Novo campo para indicar se é um trial
 
     if not price_id or not plan_name or not billing_cycle:
         logger.error(f"Missing required fields: price_id={price_id}, plan_name={plan_name}, billing_cycle={billing_cycle}")
@@ -51,21 +52,21 @@ def create_checkout_session(request):
         )
 
     try:
-        # Verificar se o usuário (Barbearia) existe
         if not Barbearia.objects.filter(id=request.user.id).exists():
             logger.error(f"Barbearia not found for user id: {request.user.id}")
             return JsonResponse({'error': 'Usuário Barbearia não encontrado'}, status=404)
 
         logger.info(f"Creating checkout session for user: {request.user.id}, email: {request.user.email}")
         
-        # Criar um cliente no Stripe
         customer = stripe.Customer.create(
             email=request.user.email,
             metadata={'barbearia_id': str(request.user.id)}
         )
         logger.info(f"Created Stripe customer: {customer.id} with barbearia_id: {request.user.id}")
 
-        # Criar a sessão de checkout
+        # Configurar trial de 30 dias se for o primeiro acesso
+        trial_period_days = 30 if is_trial else None
+
         checkout_session = stripe.checkout.Session.create(
             customer=customer.id,
             payment_method_types=['card'],
@@ -73,16 +74,21 @@ def create_checkout_session(request):
             mode='subscription',
             success_url='http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url='http://localhost:5173/cancel',
-            metadata={'plan_name': plan_name}
+            metadata={'plan_name': plan_name},
+            subscription_data={'trial_period_days': trial_period_days}  # Adiciona trial de 30 dias
         )
 
         # Criar ou atualizar a assinatura no banco de dados
+        from django.utils import timezone
+        trial_end = timezone.now() + timezone.timedelta(days=30) if is_trial else None
         subscription, created = Subscription.objects.update_or_create(
             barbearia=request.user,
             defaults={
                 'stripe_customer_id': customer.id,
                 'plan_name': plan_name,
                 'billing_cycle': billing_cycle,
+                'status': 'trial' if is_trial else 'pending',
+                'trial_end': trial_end,
             }
         )
         logger.info(f"Subscription updated/created for barbearia {request.user.id}: {subscription.id}")

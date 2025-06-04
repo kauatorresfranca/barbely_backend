@@ -1,4 +1,3 @@
-# subscriptions/models.py
 from django.db import models
 from users.models import Barbearia
 
@@ -12,9 +11,19 @@ class Subscription(models.Model):
         ('pending', 'Pendente'),
         ('active', 'Ativa'),
         ('canceled', 'Cancelada'),
+        ('trial', 'Trial'),
+        ('expired', 'Expirada'),
     ])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    trial_end = models.DateTimeField(null=True, blank=True)  # Data de expiração do trial
 
     def __str__(self):
         return f"{self.plan_name} ({self.billing_cycle}) - {self.barbearia}"
+
+    def is_active(self):
+        """Verifica se a assinatura está ativa (incluindo trial)."""
+        return self.status in ['active', 'trial'] and (not self.trial_end or self.trial_end > timezone.now())
+
+# Certifique-se de importar timezone se ainda não o fez
+from django.utils import timezone
