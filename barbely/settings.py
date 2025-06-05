@@ -277,5 +277,5 @@ LOGGING = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Adiciona log para verificar CORS
+# log para verificar CORS
 logger.info(f"CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")
