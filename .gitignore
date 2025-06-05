@@ -20,6 +20,7 @@ __pycache__/
 .idea/
 *.sublime-project
 *.sublime-workspace
+.env
 
 # 🔹 Ignorar arquivos gerados pelo sistema operacional
 .DS_Store
