@@ -1,5 +1,8 @@
 import stripe
-from env import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+from django.conf import settings
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -14,8 +17,6 @@ import logging
 
 # Configurar logging para depuração
 logger = logging.getLogger(__name__)
-
-stripe.api_key = STRIPE_SECRET_KEY
 
 @api_view(['POST'])
 @csrf_exempt
@@ -177,7 +178,7 @@ def check_session(request, session_id):
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
-    endpoint_secret = STRIPE_WEBHOOK_SECRET
+    endpoint_secret = endpoint_secret
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
